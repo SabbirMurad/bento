@@ -9,6 +9,12 @@
   flex-wrap: wrap;
 }
 
+#shortcuts-wrapper.vertical {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  max-width: none;
+}
+
 #shortcuts-wrapper .item {
   width: 40px;
   height: 40px;
@@ -33,6 +39,11 @@
   width: 24px;
   height: 24px;
   user-select: none;
+}
+
+#shortcuts-wrapper .item.add-more img {
+  width: 18px;
+  height: 18px;
 }
 
 /* Dark transparent overlay */

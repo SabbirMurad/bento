@@ -7,10 +7,37 @@
   height: 40px;
   border-radius: 12px;
   align-items: center;
+  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1), top 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
 }
 
 #search-wrapper.visible {
   display: flex;
+}
+
+#search-wrapper.focused {
+  z-index: 950;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+}
+
+/* Full-screen blur backdrop shown while the search bar is focused */
+#search-focus-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease, backdrop-filter 0.35s ease, background 0.35s ease;
+}
+
+#search-focus-overlay.active {
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 #search-wrapper img {
@@ -39,34 +66,42 @@
 
 #search-history-dropdown {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 14px);
   left: 0;
   right: 0;
-  border-radius: 10px;
-  display: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   z-index: 100;
-  max-height: 360px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  height: 0;
+  overflow: hidden;
   padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.25s ease, transform 0.25s ease, height 0.25s ease;
 }
 
 #search-history-dropdown.open {
-  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .history-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 8px 14px;
   cursor: pointer;
   transition: background 0.15s ease;
   min-width: 0;
-}
-
-.history-item + .history-item {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
 }
 
 .history-item:hover,

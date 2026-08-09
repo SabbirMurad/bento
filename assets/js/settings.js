@@ -447,18 +447,79 @@ searchToggle.addEventListener('change', () => {
 });
 
 // ---------------------------
+// Shortcuts layout toggle (horizontal / vertical)
+// ---------------------------
+const shortcutsLayoutWrapper = document.getElementById('shortcuts-wrapper');
+const shortcutLayoutToggle = document.getElementById('shortcut-layout-toggle');
+
+if (localStorage.getItem('shortcuts-layout') === 'vertical') {
+    shortcutsLayoutWrapper.classList.add('vertical');
+    shortcutLayoutToggle.checked = true;
+}
+
+shortcutLayoutToggle.addEventListener('change', () => {
+    const vertical = shortcutLayoutToggle.checked;
+    shortcutsLayoutWrapper.classList.toggle('vertical', vertical);
+    localStorage.setItem('shortcuts-layout', vertical ? 'vertical' : 'horizontal');
+});
+
+// ---------------------------
+// Shortcuts spacing control
+// ---------------------------
+const shortcutGapSlider = document.getElementById('shortcut-gap-slider');
+
+function applyShortcutGap(gap) {
+    shortcutsLayoutWrapper.style.gap = gap + 'px';
+    shortcutGapSlider.parentElement.querySelector('.range-slider__value').textContent = gap;
+}
+
+const savedShortcutGap = localStorage.getItem('shortcuts-gap');
+if (savedShortcutGap) {
+    shortcutGapSlider.value = savedShortcutGap;
+    applyShortcutGap(savedShortcutGap);
+}
+
+shortcutGapSlider.addEventListener('input', () => {
+    applyShortcutGap(shortcutGapSlider.value);
+    localStorage.setItem('shortcuts-gap', shortcutGapSlider.value);
+});
+
+// ---------------------------
 // Search history dropdown
 // ---------------------------
 const historyDropdown = document.getElementById('search-history-dropdown');
 let highlightIndex = -1;
 let historyItems = [];
 
+function openHistoryDropdown() {
+    // Freeze at the current (pre-change) height first, then force a reflow
+    // before growing to the new target — otherwise the browser can collapse
+    // both style changes into a single frame and skip the transition.
+    historyDropdown.style.height = historyDropdown.offsetHeight + 'px';
+    void historyDropdown.offsetHeight;
+
+    historyDropdown.classList.add('open');
+    // Animate to the list's actual content height instead of a fixed value,
+    // so the reveal/collapse matches however many items are actually showing.
+    historyDropdown.style.height = historyDropdown.scrollHeight + 'px';
+}
+
+function closeHistoryDropdown() {
+    // Same freeze-then-reflow trick in reverse, so collapsing always has a
+    // concrete starting height to transition from.
+    historyDropdown.style.height = historyDropdown.offsetHeight + 'px';
+    void historyDropdown.offsetHeight;
+
+    historyDropdown.classList.remove('open');
+    historyDropdown.style.height = '0px';
+}
+
 async function showHistory(query) {
     if (!chrome?.history) return;
 
     const results = await chrome.history.search({
         text: query || '',
-        maxResults: 6,
+        maxResults: 10,
         startTime: 0
     });
 
@@ -467,7 +528,7 @@ async function showHistory(query) {
     historyDropdown.innerHTML = '';
 
     if (results.length === 0) {
-        historyDropdown.classList.remove('open');
+        closeHistoryDropdown();
         return;
     }
 
@@ -486,7 +547,7 @@ async function showHistory(query) {
         historyDropdown.appendChild(el);
     });
 
-    historyDropdown.classList.add('open');
+    openHistoryDropdown();
 }
 
 function setHighlight(index) {
@@ -495,11 +556,103 @@ function setHighlight(index) {
     highlightIndex = index;
 }
 
-searchInput.addEventListener('focus', () => showHistory(searchInput.value));
+// ---------------------------
+// Search bar focus animation (center + blur backdrop)
+// ---------------------------
+const searchFocusOverlay = document.getElementById('search-focus-overlay');
+let searchUnfocusTimer;
+
+const SEARCH_POSITION_PROPS = ['position', 'left', 'top', 'right', 'bottom', 'transform'];
+let savedSearchInlineStyles = null;
+
+function restoreSearchInlineProp(prop) {
+    const saved = savedSearchInlineStyles[prop];
+    if (saved.value) {
+        searchWrapper.style.setProperty(prop, saved.value, saved.priority);
+    } else {
+        searchWrapper.style.removeProperty(prop);
+    }
+}
+
+function focusSearchBar() {
+    clearTimeout(searchUnfocusTimer);
+
+    // Save whatever inline positioning styles are already on the element
+    // (e.g. a custom position picked in Settings) *before* we override them,
+    // so unfocus can restore that exact position instead of falling back to
+    // the CSS defaults.
+    if (!searchWrapper.classList.contains('focused')) {
+        savedSearchInlineStyles = {};
+        SEARCH_POSITION_PROPS.forEach(prop => {
+            savedSearchInlineStyles[prop] = {
+                value: searchWrapper.style.getPropertyValue(prop),
+                priority: searchWrapper.style.getPropertyPriority(prop),
+            };
+        });
+    }
+
+    const rect = searchWrapper.getBoundingClientRect();
+
+    // Freeze the current visual position as fixed px coordinates first (no
+    // jump), fully taking over left/top/transform from the position classes
+    // (.horizontal-center / .vertical-center use `!important`, so plain
+    // inline styles would be overridden by them without also using
+    // `important` here).
+    searchWrapper.style.setProperty('position', 'fixed', 'important');
+    searchWrapper.style.setProperty('left', `${rect.left}px`, 'important');
+    searchWrapper.style.setProperty('top', `${rect.top}px`, 'important');
+    searchWrapper.style.setProperty('right', 'auto', 'important');
+    searchWrapper.style.setProperty('bottom', 'auto', 'important');
+    searchWrapper.style.setProperty('transform', 'none', 'important');
+
+    // Force layout so the browser registers the frozen starting point
+    // before animating to the target, otherwise the transition is skipped.
+    void searchWrapper.offsetHeight;
+
+    searchWrapper.classList.add('focused');
+    searchFocusOverlay.classList.add('active');
+
+    const targetLeft = window.innerWidth / 2 - rect.width / 2;
+    const targetTop = window.innerHeight / 2 - 200 - rect.height / 2;
+
+    searchWrapper.style.setProperty('left', `${targetLeft}px`, 'important');
+    searchWrapper.style.setProperty('top', `${targetTop}px`, 'important');
+    // No scale here: a transform:scale() on this element combined with the
+    // history dropdown's clipped/ellipsis text underneath causes the text to
+    // fail to paint in Chromium (confirmed — icon rendered, text vanished).
+}
+
+function unfocusSearchBar() {
+    if (!savedSearchInlineStyles) return;
+
+    restoreSearchInlineProp('left');
+    restoreSearchInlineProp('top');
+    restoreSearchInlineProp('right');
+    restoreSearchInlineProp('bottom');
+    restoreSearchInlineProp('transform');
+    searchFocusOverlay.classList.remove('active');
+
+    clearTimeout(searchUnfocusTimer);
+    searchUnfocusTimer = setTimeout(() => {
+        restoreSearchInlineProp('position');
+        searchWrapper.classList.remove('focused');
+        savedSearchInlineStyles = null;
+    }, 350);
+}
+
+searchFocusOverlay.addEventListener('click', () => {
+    searchInput.blur();
+});
+
+searchInput.addEventListener('focus', () => {
+    showHistory(searchInput.value);
+    focusSearchBar();
+});
 searchInput.addEventListener('input', () => showHistory(searchInput.value));
 
 searchInput.addEventListener('blur', () => {
-    setTimeout(() => historyDropdown.classList.remove('open'), 150);
+    setTimeout(() => closeHistoryDropdown(), 150);
+    unfocusSearchBar();
 });
 
 searchInput.addEventListener('keydown', e => {
@@ -510,7 +663,7 @@ searchInput.addEventListener('keydown', e => {
         e.preventDefault();
         setHighlight(Math.max(highlightIndex - 1, -1));
     } else if (e.key === 'Escape') {
-        historyDropdown.classList.remove('open');
+        closeHistoryDropdown();
         searchInput.blur();
     } else if (e.key === 'Enter') {
         if (highlightIndex >= 0 && historyItems[highlightIndex]) {

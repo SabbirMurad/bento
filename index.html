@@ -76,10 +76,11 @@
                 <img src="assets/icon/edit.svg" alt="Add">
             </div>
         </div>
+        <div id="search-focus-overlay"></div>
         <div id="search-wrapper" class="glass-card horizontal-center">
             <img src="assets/icon/search.svg" alt="search">
             <input type="text" placeholder="Search ..." name="search" autocomplete="off">
-            <div id="search-history-dropdown" class="glass-card"></div>
+            <div id="search-history-dropdown"></div>
         </div>
 
         <!-- Settings -->
@@ -275,6 +276,21 @@
                         <span>Text Color</span>
                         <input type="color">
                         <input type="text" class="hex-input" placeholder="#FFFFFF" maxlength="7" spellcheck="false">
+                    </div>
+                    <div class="item">
+                        <span>Vertical Layout</span>
+                        <label class="switch">
+                            <input type="checkbox" id="shortcut-layout-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="item">
+                        <p>Spacing</p>
+                        <div class="range-slider">
+                            <input class="range-slider__range" type="range" value="24" min="0" max="60"
+                                id="shortcut-gap-slider">
+                            <span class="range-slider__value">24</span>
+                        </div>
                     </div>
                     <div class="item position" content-id="shortcuts-wrapper">
                         <p>Position</p>
