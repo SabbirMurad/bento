@@ -488,21 +488,41 @@ function renderOutlineClock(now, parts) {
 // ---------------------------
 // Tick
 // ---------------------------
-function updateClock() {
-    const now = new Date();
-    const parts = timeParts(now);
 
-    renderGlassClock(now, parts);
-    renderAnalogClock(now);
-    renderGlowClock(now, parts);
-    renderStackClock(now, parts);
-    renderFlipClock(parts);
-    renderWordClock(now);
-    renderRingClock(now, parts);
-    renderLcdClock(parts);
-    renderReelClock(now);
-    renderArcClock(now, parts);
-    renderOutlineClock(now, parts);
+// Only the face on screen is drawn. All eleven used to be redrawn every
+// second — the LCD rewriting 42 segment classes, the reels recomputing
+// transforms, the word clock diffing its grid — for ten faces nobody could
+// see, on a page that is open in every new tab.
+const CLOCK_FACES = {
+    'clock-v1': (now, parts) => renderGlassClock(now, parts),
+    'clock-v2': now => renderAnalogClock(now),
+    'clock-v3': (now, parts) => renderGlowClock(now, parts),
+    'clock-v4': (now, parts) => renderStackClock(now, parts),
+    'clock-v5': (now, parts) => renderFlipClock(parts),
+    'clock-v6': now => renderWordClock(now),
+    'clock-v7': (now, parts) => renderRingClock(now, parts),
+    'clock-v8': (now, parts) => renderLcdClock(parts),
+    'clock-v9': now => renderReelClock(now),
+    'clock-v10': (now, parts) => renderArcClock(now, parts),
+    'clock-v11': (now, parts) => renderOutlineClock(now, parts),
+};
+
+let activeClockFace = localStorage.getItem('clock-style') || 'clock-v1';
+
+// Called by applyClockStyle in settings.js. Draws straight away, or the face
+// you just picked would show whatever it last held for up to a second.
+function setActiveClockFace(name) {
+    if (!CLOCK_FACES[name]) return;
+    activeClockFace = name;
+    updateClock();
+}
+
+function updateClock() {
+    const render = CLOCK_FACES[activeClockFace];
+    if (!render) return;
+
+    const now = new Date();
+    render(now, timeParts(now));
 }
 
 // setInterval drifts, which the seconds-driven faces show as a stutter or a

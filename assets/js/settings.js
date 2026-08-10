@@ -394,6 +394,11 @@ function applyClockStyle(clockName) {
         style.classList.toggle('selected', selected);
         style.setAttribute('aria-pressed', selected ? 'true' : 'false');
     });
+
+    // clock.js only draws the face on screen, so tell it which that is. It
+    // loads after this file, and this runs once at parse time before it
+    // exists — that first call is covered by clock.js reading the same key.
+    if (typeof setActiveClockFace === 'function') setActiveClockFace(clockName);
 }
 
 clockStyles.forEach(style => {
