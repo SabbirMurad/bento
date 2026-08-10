@@ -4,7 +4,9 @@
   justify-content: center;
   gap: 24px;
   position: absolute;
-  bottom: 204px;
+  /* Percentage from the top, matching the clock and the search bar. See the
+     note in clock.css for why none of these three measure from the bottom. */
+  top: 65%;
   max-width: 696px;
   flex-wrap: wrap;
 }

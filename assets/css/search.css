@@ -1,9 +1,8 @@
 #search-wrapper {
   position: absolute;
-  /* Anchored to the bottom like the shortcuts, so it stays clear of them
-     and of the clock at any viewport height. Top 600px put it inside the
-     clock once the bar started showing by default. */
-  bottom: 120px;
+  /* Percentage from the top, matching the clock and the shortcuts. See the
+     note in clock.css for why none of these three measure from the bottom. */
+  top: 52%;
   padding: 0px 12px;
   display: flex;
   width: 684px;

@@ -1,6 +1,11 @@
+/* The default offsets for the clock, search bar and shortcuts are percentages
+   rather than pixels, and all three measure from the top. Anchoring the clock
+   to the top in pixels while the other two measured up from the bottom meant
+   any window that was not the height this was designed on closed the gap
+   between them — at 935px the clock already overlapped the shortcuts. */
 #clock-position-wrapper {
   position: absolute;
-  top: 548px;
+  top: 24%;
 }
 
 #clock-wrapper {
