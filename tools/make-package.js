@@ -26,6 +26,7 @@ const INCLUDE = [
     'assets/favicon',
     'assets/brand/icon.svg',
     // Only the scripts index.html actually loads.
+    'assets/js/sync.js',
     'assets/js/utils.js',
     'assets/js/settings.js',
     'assets/js/clock.js',
