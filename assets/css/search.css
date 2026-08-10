@@ -1,6 +1,9 @@
 #search-wrapper {
   position: absolute;
-  top: 600px;
+  /* Anchored to the bottom like the shortcuts, so it stays clear of them
+     and of the clock at any viewport height. Top 600px put it inside the
+     clock once the bar started showing by default. */
+  bottom: 120px;
   padding: 0px 12px;
   display: none;
   width: 684px;

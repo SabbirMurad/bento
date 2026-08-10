@@ -68,6 +68,100 @@
                     <p class="time">15:17:53</p>
                 </div>
             </div>
+
+            <div id="stack-clock-wrapper" class="clock-item clock-v4">
+                <div class="stack-time">
+                    <span class="stack-hours">09</span>
+                    <span class="stack-minutes">41</span>
+                </div>
+                <div class="stack-progress"><span></span></div>
+                <div class="stack-foot">
+                    <span class="stack-meridiem">AM</span>
+                    <span class="rule"></span>
+                    <span class="stack-date">Mon 10 Aug</span>
+                </div>
+            </div>
+
+            <!-- Digits are built by clock.js: each needs four panels. -->
+            <div id="flip-clock-wrapper" class="clock-item clock-v5">
+                <div class="flip-group" data-unit="hours"></div>
+                <div class="flip-group" data-unit="minutes"></div>
+                <div class="flip-group small" data-unit="seconds"></div>
+                <div class="flip-meridiem">AM</div>
+            </div>
+
+            <!-- Letter grid is built by clock.js from WORD_CLOCK_ROWS. -->
+            <div id="word-clock-wrapper" class="clock-item clock-v6">
+                <div class="word-clock"></div>
+            </div>
+
+            <div id="ring-clock-wrapper" class="clock-item clock-v7">
+                <div class="ring-clock">
+                    <svg viewBox="0 0 232 232">
+                        <g class="ring-track">
+                            <circle cx="116" cy="116" r="106"></circle>
+                            <circle cx="116" cy="116" r="88"></circle>
+                            <circle cx="116" cy="116" r="70"></circle>
+                        </g>
+                        <circle class="ring-arc ring-seconds" cx="116" cy="116" r="106" pathLength="100"></circle>
+                        <circle class="ring-arc ring-minutes" cx="116" cy="116" r="88" pathLength="100"></circle>
+                        <circle class="ring-arc ring-hours" cx="116" cy="116" r="70" pathLength="100"></circle>
+                    </svg>
+                    <div class="ring-face">
+                        <div class="ring-time">09:41</div>
+                        <div class="ring-date">Mon 10 Aug</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segments are built by clock.js: seven per digit. -->
+            <div id="lcd-clock-wrapper" class="clock-item clock-v8">
+                <div class="lcd-group" data-unit="hours"></div>
+                <div class="lcd-colon"><i></i><i></i></div>
+                <div class="lcd-group" data-unit="minutes"></div>
+                <div class="lcd-group small" data-unit="seconds"></div>
+                <div class="lcd-meridiem">AM</div>
+            </div>
+
+            <!-- Reel strips are built by clock.js. -->
+            <div id="reel-clock-wrapper" class="clock-item clock-v9">
+                <div class="reel-column">
+                    <div class="reel" data-unit="hours"><div class="reel-strip"></div></div>
+                    <span class="reel-label">Hr</span>
+                </div>
+                <div class="reel-column">
+                    <div class="reel" data-unit="minutes"><div class="reel-strip"></div></div>
+                    <span class="reel-label">Min</span>
+                </div>
+                <div class="reel-column">
+                    <div class="reel" data-unit="seconds"><div class="reel-strip"></div></div>
+                    <span class="reel-label">Sec</span>
+                </div>
+            </div>
+
+            <div id="arc-clock-wrapper" class="clock-item clock-v10">
+                <svg viewBox="0 0 340 210">
+                    <path class="arc-day" d="M 40 150 A 130 95 0 0 1 300 150"></path>
+                    <line class="arc-horizon" x1="18" y1="150" x2="322" y2="150"></line>
+                    <line class="arc-night" x1="40" y1="178" x2="300" y2="178"></line>
+                    <text class="arc-time" x="170" y="118">09:41</text>
+                    <text class="arc-date" x="170" y="138">MON 10 AUG</text>
+                    <text class="arc-end" x="40" y="199">06:00</text>
+                    <text class="arc-end arc-end-right" x="300" y="199">18:00</text>
+                    <circle class="arc-marker" cx="40" cy="150" r="7"></circle>
+                </svg>
+            </div>
+
+            <div id="outline-clock-wrapper" class="clock-item clock-v11">
+                <div class="outline-row">
+                    <span class="outline-time">09:41</span>
+                    <span class="outline-side">
+                        <span class="outline-seconds">53</span>
+                        <span class="outline-meridiem">AM</span>
+                    </span>
+                </div>
+                <div class="outline-date">Monday 10 August</div>
+            </div>
         </div>
 
         <!-- Shortcuts -->
@@ -165,9 +259,17 @@
                     <div class="item">
                         <p>Style</p>
                         <div class="clock-style-wrapper">
-                            <img src="/assets/image/clock_option/digital_v1.png" alt="" clock-name="clock-v1">
-                            <img src="/assets/image/clock_option/analog_v1.png" alt="" clock-name="clock-v2">
-                            <img src="/assets/image/clock_option/digital_v2.png" alt="" clock-name="clock-v3">
+                            <img src="/assets/image/clock_option/card_v1.svg" alt="Card" clock-name="clock-v1">
+                            <img src="/assets/image/clock_option/analog_v1.svg" alt="Analog" clock-name="clock-v2">
+                            <img src="/assets/image/clock_option/glow_v1.svg" alt="Glow" clock-name="clock-v3">
+                            <img src="/assets/image/clock_option/stacked_v1.svg" alt="Stacked" clock-name="clock-v4">
+                            <img src="/assets/image/clock_option/flip_v1.svg" alt="Flip" clock-name="clock-v5">
+                            <img src="/assets/image/clock_option/words_v1.svg" alt="Words" clock-name="clock-v6">
+                            <img src="/assets/image/clock_option/rings_v1.svg" alt="Rings" clock-name="clock-v7">
+                            <img src="/assets/image/clock_option/lcd_v1.svg" alt="LCD" clock-name="clock-v8">
+                            <img src="/assets/image/clock_option/reels_v1.svg" alt="Reels" clock-name="clock-v9">
+                            <img src="/assets/image/clock_option/dayarc_v1.svg" alt="Day arc" clock-name="clock-v10">
+                            <img src="/assets/image/clock_option/outline_v1.svg" alt="Outline" clock-name="clock-v11">
                         </div>
                     </div>
                     <div class="item">

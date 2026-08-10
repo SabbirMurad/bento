@@ -220,3 +220,645 @@
 		    margin: 0;
     }
 }
+
+/* ===============================================================
+   Shared tokens for the clock faces below.
+
+   The user picks a single colour (--clock-text-color) and it sits
+   over whatever background image or video they chose, so these
+   faces cannot differentiate themselves with a palette. Every tint
+   here is mixed down from that one colour, and the styles set
+   themselves apart by form instead: type, rhythm and motion.
+   =============================================================== */
+.clock-item {
+  --clock-ink-70: color-mix(in srgb, var(--clock-text-color) 70%, transparent);
+  --clock-ink-55: color-mix(in srgb, var(--clock-text-color) 55%, transparent);
+  --clock-ink-45: color-mix(in srgb, var(--clock-text-color) 45%, transparent);
+  --clock-ink-18: color-mix(in srgb, var(--clock-text-color) 18%, transparent);
+  --clock-ink-12: color-mix(in srgb, var(--clock-text-color) 12%, transparent);
+  --clock-lift: 0 2px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------------------------------------------------------------
+   v4 — Stacked. The time set as a poster rather than a readout:
+   hours over minutes in a hairline weight, locked into one block.
+   --------------------------------------------------------------- */
+#stack-clock-wrapper {
+  display: none;
+  flex-direction: column;
+  cursor: default;
+  color: var(--clock-text-color);
+  text-shadow: var(--clock-lift);
+}
+
+#stack-clock-wrapper .stack-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 132px;
+  font-weight: 200;
+  /* Under 1 so the two numerals read as a single mass, not two lines. */
+  line-height: 0.82;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+#stack-clock-wrapper .stack-minutes {
+  color: var(--clock-ink-55);
+}
+
+/* The seconds, as the width of the block filling once a minute. */
+#stack-clock-wrapper .stack-progress {
+  width: 100%;
+  height: 1px;
+  margin: 28px 0 14px;
+  background: var(--clock-ink-18);
+}
+
+#stack-clock-wrapper .stack-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--clock-text-color);
+  transition: width 0.9s linear;
+}
+
+#stack-clock-wrapper .stack-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+#stack-clock-wrapper .stack-date {
+  color: var(--clock-ink-70);
+}
+
+#stack-clock-wrapper .stack-foot .rule {
+  width: 18px;
+  height: 1px;
+  background: var(--clock-ink-45);
+}
+
+/* ---------------------------------------------------------------
+   v5 — Flip. A split-flap board: each digit is a stack of four
+   panels, two static halves plus two leaves that rotate through
+   each other on a change. Seconds are kept small so the movement
+   reads as an instrument detail rather than the main event.
+   --------------------------------------------------------------- */
+#flip-clock-wrapper {
+  display: none;
+  align-items: flex-end;
+  /* Wide enough that hours and minutes read as two numbers rather than
+     one run of four digits. */
+  gap: 30px;
+  cursor: default;
+}
+
+#flip-clock-wrapper .flip-group {
+  display: flex;
+  gap: 6px;
+  --digit-w: 78px;
+  --digit-h: 112px;
+  --digit-size: 88px;
+}
+
+#flip-clock-wrapper .flip-group.small {
+  --digit-w: 40px;
+  --digit-h: 58px;
+  --digit-size: 44px;
+}
+
+#flip-clock-wrapper .flip-digit {
+  position: relative;
+  width: var(--digit-w);
+  height: var(--digit-h);
+  perspective: 340px;
+  font-size: var(--digit-size);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--clock-text-color);
+}
+
+#flip-clock-wrapper .flip-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  /* Deeper than the other glass surfaces: these read as physical cards,
+     and they have to hold their edge over a bright background too. The
+     tint layers over whatever glass colour the user picked. */
+  background: linear-gradient(rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.28)), var(--glass-bg-color);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Each half holds a full-height glyph and crops it, so the two
+   halves line up into one numeral with a seam across the middle. */
+#flip-clock-wrapper .flip-panel span {
+  display: block;
+  height: var(--digit-h);
+  line-height: var(--digit-h);
+  text-align: center;
+}
+
+#flip-clock-wrapper .flip-panel.is-top {
+  top: 0;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+}
+
+#flip-clock-wrapper .flip-panel.is-bottom {
+  top: 50%;
+  border-top: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 0 0 10px 10px;
+}
+
+#flip-clock-wrapper .flip-panel.is-bottom span {
+  margin-top: calc(var(--digit-h) / -2);
+}
+
+#flip-clock-wrapper .flip-panel.leaf {
+  visibility: hidden;
+  z-index: 2;
+}
+
+#flip-clock-wrapper .flip-panel.leaf-front {
+  transform-origin: bottom center;
+}
+
+#flip-clock-wrapper .flip-panel.leaf-back {
+  transform-origin: top center;
+  transform: rotateX(90deg);
+}
+
+#flip-clock-wrapper .flip-digit.flipping .leaf {
+  visibility: visible;
+}
+
+#flip-clock-wrapper .flip-digit.flipping .leaf-front {
+  animation: flip-fall 0.24s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+#flip-clock-wrapper .flip-digit.flipping .leaf-back {
+  animation: flip-land 0.24s cubic-bezier(0, 0, 0.3, 1) 0.24s both;
+}
+
+@keyframes flip-fall {
+  from { transform: rotateX(0deg); }
+  to   { transform: rotateX(-90deg); }
+}
+
+@keyframes flip-land {
+  from { transform: rotateX(90deg); }
+  to   { transform: rotateX(0deg); }
+}
+
+#flip-clock-wrapper .flip-meridiem {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  padding-bottom: 6px;
+  color: var(--clock-ink-70);
+  text-shadow: var(--clock-lift);
+}
+
+/* ---------------------------------------------------------------
+   v6 — Words. The grid never changes; only which letters are lit,
+   so the whole face is legible as a sentence and as a texture.
+   --------------------------------------------------------------- */
+#word-clock-wrapper {
+  display: none;
+  cursor: default;
+}
+
+#word-clock-wrapper .word-clock {
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  gap: 12px 14px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--clock-ink-12);
+}
+
+#word-clock-wrapper .word-clock span {
+  transition: color 0.6s ease, text-shadow 0.6s ease;
+}
+
+#word-clock-wrapper .word-clock span.lit {
+  color: var(--clock-text-color);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--clock-text-color) 45%, transparent),
+               var(--clock-lift);
+}
+
+/* ---------------------------------------------------------------
+   v7 — Rings. Hours, minutes and seconds as three arcs of how far
+   through each unit we are. No hands: this reads as a measurement,
+   which is what keeps it distinct from the analog face.
+   --------------------------------------------------------------- */
+#ring-clock-wrapper {
+  display: none;
+  cursor: default;
+}
+
+#ring-clock-wrapper .ring-clock {
+  position: relative;
+  width: 232px;
+  height: 232px;
+}
+
+#ring-clock-wrapper svg {
+  width: 100%;
+  height: 100%;
+  /* Start every arc at 12 o'clock instead of 3. */
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+#ring-clock-wrapper circle {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+#ring-clock-wrapper .ring-track circle {
+  stroke: var(--clock-ink-12);
+}
+
+/* Weight follows importance: the hour is the thing you actually read, so
+   it is the innermost, thickest and brightest arc, and the seconds are a
+   hairline on the outside. */
+#ring-clock-wrapper .ring-arc {
+  /* pathLength="100" on the element makes these percentages. */
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
+  transition: stroke-dashoffset 0.9s linear;
+}
+
+#ring-clock-wrapper .ring-arc.ring-hours {
+  stroke: var(--clock-text-color);
+  stroke-width: 5;
+}
+
+#ring-clock-wrapper .ring-arc.ring-minutes {
+  stroke: var(--clock-ink-70);
+}
+
+#ring-clock-wrapper .ring-arc.ring-seconds {
+  stroke: var(--clock-ink-45);
+  stroke-width: 2;
+}
+
+/* Wrapping from 59 back to 0 would otherwise animate backwards
+   the whole way around. */
+#ring-clock-wrapper .ring-arc.no-transition {
+  transition: none;
+}
+
+#ring-clock-wrapper .ring-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--clock-text-color);
+  text-shadow: var(--clock-lift);
+}
+
+#ring-clock-wrapper .ring-time {
+  font-size: 46px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+#ring-clock-wrapper .ring-date {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--clock-ink-70);
+}
+
+/* ---------------------------------------------------------------
+   v8 — LCD. Seven segments per digit, with the unlit ones left
+   faintly visible. That ghost is the whole point: it is what makes
+   the face read as a panel rather than as a typeface.
+   --------------------------------------------------------------- */
+#lcd-clock-wrapper {
+  display: none;
+  align-items: flex-end;
+  gap: 14px;
+  cursor: default;
+  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.5));
+}
+
+#lcd-clock-wrapper .lcd-group {
+  display: flex;
+  gap: 10px;
+  --lcd-w: 62px;
+  --lcd-h: 104px;
+}
+
+#lcd-clock-wrapper .lcd-group.small {
+  --lcd-w: 30px;
+  --lcd-h: 50px;
+  margin-left: 8px;
+}
+
+#lcd-clock-wrapper .lcd-digit {
+  position: relative;
+  width: var(--lcd-w);
+  height: var(--lcd-h);
+}
+
+#lcd-clock-wrapper .seg {
+  position: absolute;
+  background: var(--clock-text-color);
+  opacity: 0.08;
+  transition: opacity 0.12s ease;
+}
+
+#lcd-clock-wrapper .seg.on {
+  opacity: 1;
+}
+
+/* Mitred ends, so neighbouring segments meet at a diagonal. */
+#lcd-clock-wrapper .seg-a,
+#lcd-clock-wrapper .seg-d,
+#lcd-clock-wrapper .seg-g {
+  left: 19%;
+  right: 19%;
+  height: 9%;
+  clip-path: polygon(7% 0, 93% 0, 100% 50%, 93% 100%, 7% 100%, 0 50%);
+}
+
+#lcd-clock-wrapper .seg-b,
+#lcd-clock-wrapper .seg-c,
+#lcd-clock-wrapper .seg-e,
+#lcd-clock-wrapper .seg-f {
+  width: 15%;
+  height: 32%;
+  clip-path: polygon(0 7%, 50% 0, 100% 7%, 100% 93%, 50% 100%, 0 93%);
+}
+
+#lcd-clock-wrapper .seg-a { top: 2%; }
+#lcd-clock-wrapper .seg-g { top: 45.5%; }
+#lcd-clock-wrapper .seg-d { bottom: 2%; }
+#lcd-clock-wrapper .seg-f { left: 4%; top: 13%; }
+#lcd-clock-wrapper .seg-b { right: 4%; top: 13%; }
+#lcd-clock-wrapper .seg-e { left: 4%; bottom: 13%; }
+#lcd-clock-wrapper .seg-c { right: 4%; bottom: 13%; }
+
+#lcd-clock-wrapper .lcd-colon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 30px;
+  height: 104px;
+  padding-bottom: 6px;
+}
+
+#lcd-clock-wrapper .lcd-colon i {
+  width: 10px;
+  height: 10px;
+  background: var(--clock-text-color);
+}
+
+#lcd-clock-wrapper .lcd-meridiem {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  padding-bottom: 6px;
+  color: var(--clock-ink-70);
+}
+
+/* ---------------------------------------------------------------
+   v9 — Reels. Each unit is a strip that slides, so the values
+   above and below stay visible: you can see the minute coming.
+   --------------------------------------------------------------- */
+#reel-clock-wrapper {
+  display: none;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: default;
+  color: var(--clock-text-color);
+}
+
+#reel-clock-wrapper .reel-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+#reel-clock-wrapper .reel {
+  width: 104px;
+  height: 168px;
+  overflow: hidden;
+  /* Fades the neighbouring values out at both edges, so no per-item
+     opacity bookkeeping is needed. */
+  mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
+  -webkit-mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
+}
+
+#reel-clock-wrapper .reel-strip {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Skips the rewind when a unit rolls over from its last value to 0. */
+#reel-clock-wrapper .reel-strip.no-transition {
+  transition: none;
+}
+
+#reel-clock-wrapper .reel-strip span {
+  display: block;
+  height: 56px;
+  line-height: 56px;
+  text-align: center;
+  font-size: 42px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--clock-lift);
+}
+
+#reel-clock-wrapper .reel-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--clock-ink-45);
+}
+
+/* ---------------------------------------------------------------
+   v10 — Day arc. Where you are between sunrise and sunset, which
+   is the one thing none of the other faces tell you.
+
+   Sunrise and sunset are fixed at 06:00 and 18:00: real ones need
+   a latitude, and asking for location permission on a new tab page
+   is not worth it.
+   --------------------------------------------------------------- */
+#arc-clock-wrapper {
+  display: none;
+  cursor: default;
+}
+
+#arc-clock-wrapper svg {
+  width: 380px;
+  height: auto;
+  overflow: visible;
+}
+
+#arc-clock-wrapper .arc-day {
+  fill: none;
+  stroke: var(--clock-ink-18);
+  stroke-width: 2;
+  stroke-dasharray: 3 6;
+  stroke-linecap: round;
+}
+
+#arc-clock-wrapper .arc-horizon {
+  stroke: var(--clock-ink-45);
+  stroke-width: 1;
+}
+
+#arc-clock-wrapper .arc-night {
+  stroke: var(--clock-ink-12);
+  stroke-width: 2;
+  stroke-dasharray: 3 6;
+  stroke-linecap: round;
+}
+
+#arc-clock-wrapper .arc-marker {
+  fill: var(--clock-text-color);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--clock-text-color) 60%, transparent));
+  transition: cx 0.9s linear, cy 0.9s linear, r 0.4s ease, fill-opacity 0.4s ease;
+}
+
+#arc-clock-wrapper .arc-marker.no-transition {
+  transition: none;
+}
+
+/* Below the horizon the marker reads as a smaller, dimmer body. */
+#arc-clock-wrapper .arc-marker.night {
+  r: 5;
+  fill-opacity: 0.55;
+  filter: none;
+}
+
+#arc-clock-wrapper text {
+  fill: var(--clock-text-color);
+  text-anchor: middle;
+  font-family: Archivo, Arial, sans-serif;
+}
+
+#arc-clock-wrapper .arc-time {
+  font-size: 38px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+
+#arc-clock-wrapper .arc-date {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  fill: var(--clock-ink-70);
+}
+
+#arc-clock-wrapper .arc-end {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  fill: var(--clock-ink-45);
+  text-anchor: start;
+}
+
+#arc-clock-wrapper .arc-end-right {
+  text-anchor: end;
+}
+
+/* ---------------------------------------------------------------
+   v11 — Outline. The time hollow, and one small solid element next
+   to it. The whole face rests on that single contrast.
+   --------------------------------------------------------------- */
+#outline-clock-wrapper {
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  cursor: default;
+  color: var(--clock-text-color);
+  filter: drop-shadow(0 2px 16px rgba(0, 0, 0, 0.5));
+}
+
+#outline-clock-wrapper .outline-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+
+#outline-clock-wrapper .outline-time {
+  font-size: 140px;
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--clock-text-color);
+}
+
+#outline-clock-wrapper .outline-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding-bottom: 16px;
+}
+
+#outline-clock-wrapper .outline-seconds {
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+#outline-clock-wrapper .outline-meridiem {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--clock-ink-70);
+}
+
+#outline-clock-wrapper .outline-date {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--clock-ink-70);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #flip-clock-wrapper .flip-digit.flipping .leaf-front,
+  #flip-clock-wrapper .flip-digit.flipping .leaf-back {
+    animation-duration: 0.01s;
+    animation-delay: 0s;
+  }
+
+  #stack-clock-wrapper .stack-progress span,
+  #word-clock-wrapper .word-clock span,
+  #ring-clock-wrapper .ring-arc,
+  #reel-clock-wrapper .reel-strip,
+  #arc-clock-wrapper .arc-marker {
+    transition: none;
+  }
+}

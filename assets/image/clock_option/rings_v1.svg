@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 172" width="260" height="172">
+<g>
+  <circle cx="130" cy="86" r="78" fill="none" stroke="#fff" stroke-opacity="0.12" stroke-width="2"/>
+  <circle cx="130" cy="86" r="64" fill="none" stroke="#fff" stroke-opacity="0.12" stroke-width="3"/>
+  <circle cx="130" cy="86" r="50" fill="none" stroke="#fff" stroke-opacity="0.12" stroke-width="5"/>
+  <circle cx="130" cy="86" r="78" fill="none" stroke="#fff" stroke-opacity="0.45" stroke-width="2" stroke-linecap="round" stroke-dasharray="269.5 490.1" transform="rotate(-90 130 86)"/>
+  <circle cx="130" cy="86" r="64" fill="none" stroke="#fff" stroke-opacity="0.7" stroke-width="3" stroke-linecap="round" stroke-dasharray="273.4 402.1" transform="rotate(-90 130 86)"/>
+  <circle cx="130" cy="86" r="50" fill="none" stroke="#fff" stroke-opacity="1" stroke-width="5" stroke-linecap="round" stroke-dasharray="254.5 314.2" transform="rotate(-90 130 86)"/>
+  <g font-family="Archivo, 'Segoe UI', Helvetica, Arial, sans-serif" text-anchor="middle" fill="#fff">
+    <text x="130" y="88" font-size="26" font-weight="300">09:41</text>
+    <text x="130" y="108" font-size="8" font-weight="500" letter-spacing="2.2" fill-opacity="0.7">MON 10 AUG</text>
+  </g>
+</g>
+</svg>

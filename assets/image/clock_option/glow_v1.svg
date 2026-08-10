@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 172" width="260" height="172">
+<defs>
+  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+    <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#9fe8ff" flood-opacity="0.85"/>
+  </filter>
+</defs>
+<g font-family="Orbitron, Consolas, 'Courier New', monospace" fill="#fff" text-anchor="middle" filter="url(#glow)">
+  <text x="130" y="66" font-size="14" letter-spacing="2">10 - 08 - 2026 | MON</text>
+  <text x="130" y="116" font-size="40" letter-spacing="1">09:41:53</text>
+</g>
+</svg>

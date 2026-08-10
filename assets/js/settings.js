@@ -306,41 +306,27 @@ settingsItem.forEach((settingsItem) => {
 const clockStyleWrapper = document.querySelector('#clock-settings-wrapper .clock-style-wrapper');
 const clockStyles = clockStyleWrapper.querySelectorAll('img');
 
+const DEFAULT_CLOCK_STYLE = 'clock-v1';
+
+function applyClockStyle(clockName) {
+    document.querySelectorAll('#clock-position-wrapper .clock-item').forEach(clock => {
+        clock.style.display = clock.classList.contains(clockName) ? 'flex' : 'none';
+    });
+
+    clockStyles.forEach(style => {
+        style.classList.toggle('selected', style.getAttribute('clock-name') === clockName);
+    });
+}
+
 clockStyles.forEach(style => {
-    style.addEventListener('click', (e) => {
-        let clockName = style.getAttribute('clock-name');
-
-        let allClocks = document.querySelectorAll('#clock-position-wrapper .clock-item');
-
+    style.addEventListener('click', () => {
+        const clockName = style.getAttribute('clock-name');
         localStorage.setItem('clock-style', clockName);
-
-        allClocks.forEach(clock => {
-            if (clock.classList.contains(clockName)) {
-                clock.style.display = 'flex';
-            }
-            else {
-                clock.style.display = 'none';
-            }
-        })
+        applyClockStyle(clockName);
     });
 })
 
-function loadSavedClockStyle() {
-    let clockStyle = localStorage.getItem('clock-style');
-    if (clockStyle) {
-        let allClocks = document.querySelectorAll('#clock-position-wrapper .clock-item');
-        allClocks.forEach(clock => {
-            if (clock.classList.contains(clockStyle)) {
-                clock.style.display = 'flex';
-            }
-            else {
-                clock.style.display = 'none';
-            }
-        })
-    }
-}
-
-loadSavedClockStyle();
+applyClockStyle(localStorage.getItem('clock-style') || DEFAULT_CLOCK_STYLE);
 
 const settingTabIcons = document.querySelectorAll('#settings-sidebar .tabs li');
 

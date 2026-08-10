@@ -543,10 +543,29 @@ input::-moz-focus-outer {
   flex-wrap: wrap;
 }
 
+/* One tile size for every preview, with the artwork scaled to fit inside
+   it, so the faces stay comparable however wide each one is drawn. */
 #settings-sidebar .clock-style-wrapper img {
+  width: 156px;
   height: 104px;
-  border-radius: 8px;
+  object-fit: contain;
+  padding: 4px;
+  border-radius: 10px;
   cursor: pointer;
+  border: 2px solid transparent;
+  opacity: 0.65;
+  transition: opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+#settings-sidebar .clock-style-wrapper img:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+#settings-sidebar .clock-style-wrapper img.selected {
+  opacity: 1;
+  border-color: #1abc9c;
+  background: rgba(26, 188, 156, 0.08);
 }
 
 /* From Uiverse.io by mrhyddenn */

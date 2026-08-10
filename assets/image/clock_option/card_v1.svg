@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 172" width="260" height="172">
+<g font-family="Archivo, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <rect x="14" y="34" width="232" height="104" rx="18" fill="#ffffff" fill-opacity="0.1"/>
+  <rect x="14" y="34" width="232" height="104" rx="18" fill="none" stroke="#ffffff" stroke-opacity="0.18"/>
+  <text x="130" y="92" font-size="34" font-weight="600" letter-spacing="2" text-anchor="middle" fill="#fff">09:41 AM</text>
+  <text x="130" y="116" font-size="11" font-weight="400" text-anchor="middle" fill="#fff">Monday, 10 Aug 2026</text>
+</g>
+</svg>
