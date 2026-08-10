@@ -40,7 +40,7 @@ async function loadShortcuts() {
     for (let i = shortcuts.length - 1; i >= 0; i--) {
         const url = shortcuts[i];
 
-        let faviconLink = "assets/icon/add.png";
+        let faviconLink = "assets/icon/web.svg";
         let domain = getDomain(url);
         if (domain) {
             let fav = getFavicon(domain);

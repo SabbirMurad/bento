@@ -6,7 +6,7 @@
 // favicon. Everything else derives its icon from the domain.
 const GOOGLE_CATALOGUE = [
     { id: 'search', name: 'Search', url: 'https://www.google.com/' },
-    { id: 'gmail', name: 'Gmail', url: 'https://mail.google.com/mail/u/0/#inbox', icon: '/assets/image/google/gmail.png' },
+    { id: 'gmail', name: 'Gmail', url: 'https://mail.google.com/mail/u/0/#inbox' },
     { id: 'drive', name: 'Drive', url: 'https://drive.google.com/u/0/', icon: 'https://ssl.gstatic.com/docs/doclist/images/mediatype/icon_1_drive_x32.png' },
     { id: 'docs', name: 'Docs', url: 'https://docs.google.com/document/u/0/', icon: 'https://ssl.gstatic.com/docs/doclist/images/mediatype/icon_1_document_x32.png' },
     { id: 'sheets', name: 'Sheets', url: 'https://docs.google.com/spreadsheets/u/0/', icon: 'https://ssl.gstatic.com/docs/doclist/images/mediatype/icon_1_spreadsheet_x32.png' },
