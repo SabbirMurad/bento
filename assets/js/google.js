@@ -184,6 +184,33 @@ function renderGoogleItemList() {
 }
 
 // ---------------------------
+// Open/close on click
+// ---------------------------
+const googleIconContainer = document.getElementById('icon-container');
+
+makeActivatable(googleIconContainer, 'button', 'Google apps');
+googleIconContainer.setAttribute('aria-expanded', 'false');
+
+function closeGooglePanel() {
+    if (!googleItemsWrapper.classList.contains('open')) return;
+    googleItemsWrapper.classList.remove('open');
+    googleIconContainer.setAttribute('aria-expanded', 'false');
+}
+
+googleIconContainer.addEventListener('click', () => {
+    const open = googleItemsWrapper.classList.toggle('open');
+    googleIconContainer.setAttribute('aria-expanded', String(open));
+});
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('#google-wrapper')) closeGooglePanel();
+});
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeGooglePanel();
+});
+
+// ---------------------------
 // Drag to reorder
 // ---------------------------
 let draggedGoogleRow = null;

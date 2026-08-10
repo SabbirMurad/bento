@@ -90,8 +90,9 @@ body.arranging .arrange-target * {
   pointer-events: none;
 }
 
-/* The Google panel opens on hover of the wrapper itself, so it would spring
-   open under the cursor the moment you reached for the button. */
+/* The Google panel opens on click. A plain click (no drag) on the icon while
+   arranging still reaches its click handler before arrange.js's blocker can
+   stop it, so this hides the panel regardless of that toggle. */
 body.arranging #google-wrapper .item-container {
   display: none;
 }

@@ -1,12 +1,32 @@
 let bookmarkDragActive = false;
 let draggedBookmark = null; // { el, sourceFolderId, sourceContainer }
 
-function positionAndShowChildren(childrenContainer, isTopLevel) {
-    childrenContainer.style.visibility = 'hidden';
+// Matches the opacity/transform transition on .bookmark-children.
+const BOOKMARK_CHILDREN_CLOSE_DELAY = 200;
+
+function resetChildrenPosition(childrenContainer) {
     childrenContainer.style.top = '';
     childrenContainer.style.bottom = '';
     childrenContainer.style.left = '';
     childrenContainer.style.right = '';
+}
+
+// classList.remove('show') starts the fade; the position offsets that flip a
+// submenu away from the screen edge stay put until the fade finishes, or a
+// flipped submenu would visibly snap back to its default corner mid-fade.
+function closeChildren(childrenContainer) {
+    clearTimeout(childrenContainer._closeTimer);
+    childrenContainer.classList.remove('show');
+    childrenContainer._closeTimer = setTimeout(
+        () => resetChildrenPosition(childrenContainer),
+        BOOKMARK_CHILDREN_CLOSE_DELAY
+    );
+}
+
+function positionAndShowChildren(childrenContainer, isTopLevel) {
+    clearTimeout(childrenContainer._closeTimer);
+    childrenContainer.style.visibility = 'hidden';
+    resetChildrenPosition(childrenContainer);
     childrenContainer.classList.add('show');
 
     const rect = childrenContainer.getBoundingClientRect();
@@ -33,11 +53,7 @@ function attachSmartHover(folder, childrenContainer, isTopLevel) {
 
     folder.addEventListener('mouseleave', () => {
         if (bookmarkDragActive) return;
-        childrenContainer.classList.remove('show');
-        childrenContainer.style.top = '';
-        childrenContainer.style.bottom = '';
-        childrenContainer.style.left = '';
-        childrenContainer.style.right = '';
+        closeChildren(childrenContainer);
     });
 
     // Spring-load: open folder automatically when hovering over it during a drag
@@ -104,13 +120,7 @@ document.addEventListener('dragend', () => {
     }
 
     // Close all open submenus so the state is clean after drag
-    document.querySelectorAll('.bookmark-children.show').forEach(c => {
-        c.classList.remove('show');
-        c.style.top = '';
-        c.style.bottom = '';
-        c.style.left = '';
-        c.style.right = '';
-    });
+    document.querySelectorAll('.bookmark-children.show').forEach(closeChildren);
 
     draggedBookmark = null;
     bookmarkDragActive = false;

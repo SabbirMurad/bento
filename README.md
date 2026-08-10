@@ -110,10 +110,12 @@ Three, each for one visible thing:
 - `history` — suggestions in the search bar
 - `storage` — shortcuts and bookmark order
 
-Settings live in `localStorage`; shortcuts and bookmark order live in
-`chrome.storage.sync`; the background video lives in IndexedDB. That split is
-not deliberate and is worth unifying — as it stands a user's shortcuts follow
-them to another machine but their layout and colours do not.
+Settings live in `localStorage`, and `sync.js` mirrors them into
+`chrome.storage.sync` (skipping the push if a snapshot would exceed the 8KB
+chrome.storage.sync allows for one item); shortcuts and bookmark order live in
+`chrome.storage.sync` directly. The background video lives in IndexedDB and
+does not sync — a fresh machine gets everything else but has to have its
+background set again.
 
 Site icons come from Google's public favicon service and the page fonts from
 Google Fonts. There is no account, no analytics and no server.

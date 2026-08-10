@@ -71,10 +71,13 @@
   top: 100%;
   left: 0px;
   padding: 8px;
-  border-radius: 6px;
+  border-radius: 16px;
   width: 244px;
-  display: none;
   z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 #bookmark-container
@@ -96,7 +99,9 @@
 }
 
 #bookmark-container .container .bookmark-folder > .bookmark-children.show {
-  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 #bookmark-container
