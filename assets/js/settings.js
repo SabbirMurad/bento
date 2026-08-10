@@ -98,6 +98,45 @@ for (let colorPicker of textColorPickers) {
     }
 }
 
+// Every position panel is the same six buttons and four inputs; only the
+// widget it drives differs, and that is on the element as content-id. So the
+// markup is written once here instead of copied into each settings tab. This
+// has to run before the controls below go looking for those pieces.
+const POSITION_AXES = [
+    {
+        values: ['left', 'horizontal-center', 'right'],
+        icons: ['align-left', 'align-center-horizontal', 'align-right'],
+        labels: ['L', 'R'],
+    },
+    {
+        values: ['top', 'vertical-center', 'bottom'],
+        icons: ['align-top', 'align-center-vertical', 'align-bottom'],
+        labels: ['T', 'B'],
+    },
+];
+
+document.querySelectorAll('#settings-sidebar .item.position').forEach(panel => {
+    panel.innerHTML = '<p>Position</p>' + POSITION_AXES.map(axis => `
+        <div class="position-axis-row">
+            <div class="align-btn-group">
+                ${axis.values.map((value, i) =>
+                    `<div class="icon" data-value="${value}"><img src="/assets/icon/${axis.icons[i]}.svg" alt=""></div>`
+                ).join('')}
+            </div>
+            <div class="pos-inputs">
+                <div class="pos-input-field">
+                    <label>${axis.labels[0]}</label>
+                    <input type="number" side-type="${axis.values[0]}" disabled>
+                </div>
+                <div class="pos-input-field">
+                    <label>${axis.labels[1]}</label>
+                    <input type="number" side-type="${axis.values[2]}" disabled>
+                </div>
+                <span class="px-unit">px</span>
+            </div>
+        </div>`).join('');
+});
+
 const settingsItem = document.querySelectorAll('#settings-sidebar .item-wrapper');
 
 // contentId -> { element, place() }. arrange.js drags a widget around the page
