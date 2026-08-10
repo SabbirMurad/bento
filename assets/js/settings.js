@@ -435,10 +435,10 @@ const searchWrapper = document.getElementById('search-wrapper');
 const searchToggle = document.getElementById('search-toggle');
 const searchInput = searchWrapper.querySelector('input');
 
-if (localStorage.getItem('search-visible') === 'true') {
-    searchWrapper.classList.add('visible');
-    searchToggle.checked = true;
-}
+// On by default: only an explicit opt-out hides the search bar.
+const searchVisible = localStorage.getItem('search-visible') !== 'false';
+searchWrapper.classList.toggle('visible', searchVisible);
+searchToggle.checked = searchVisible;
 
 searchToggle.addEventListener('change', () => {
     const visible = searchToggle.checked;
@@ -563,7 +563,9 @@ const searchFocusOverlay = document.getElementById('search-focus-overlay');
 let searchUnfocusTimer;
 
 const SEARCH_POSITION_PROPS = ['position', 'left', 'top', 'right', 'bottom', 'transform'];
+const SEARCH_ANIM_MS = 350;
 let savedSearchInlineStyles = null;
+let searchBarFocused = false;
 
 function restoreSearchInlineProp(prop) {
     const saved = savedSearchInlineStyles[prop];
@@ -574,14 +576,33 @@ function restoreSearchInlineProp(prop) {
     }
 }
 
+function restoreAllSearchInlineProps() {
+    SEARCH_POSITION_PROPS.forEach(restoreSearchInlineProp);
+}
+
+// Pin the bar where it currently sits, as fixed px coordinates, fully taking
+// over left/top/transform from the position classes (.horizontal-center /
+// .vertical-center use `!important`, so plain inline styles would be
+// overridden by them without also using `important` here).
+function freezeSearchBarAt(rect) {
+    searchWrapper.style.setProperty('position', 'fixed', 'important');
+    searchWrapper.style.setProperty('left', `${rect.left}px`, 'important');
+    searchWrapper.style.setProperty('top', `${rect.top}px`, 'important');
+    searchWrapper.style.setProperty('right', 'auto', 'important');
+    searchWrapper.style.setProperty('bottom', 'auto', 'important');
+    searchWrapper.style.setProperty('transform', 'none', 'important');
+}
+
 function focusSearchBar() {
     clearTimeout(searchUnfocusTimer);
 
     // Save whatever inline positioning styles are already on the element
     // (e.g. a custom position picked in Settings) *before* we override them,
     // so unfocus can restore that exact position instead of falling back to
-    // the CSS defaults.
-    if (!searchWrapper.classList.contains('focused')) {
+    // the CSS defaults. Skipped when a previous unfocus is still animating,
+    // since the element is carrying our frozen styles at that point, not the
+    // user's.
+    if (!savedSearchInlineStyles) {
         savedSearchInlineStyles = {};
         SEARCH_POSITION_PROPS.forEach(prop => {
             savedSearchInlineStyles[prop] = {
@@ -591,24 +612,16 @@ function focusSearchBar() {
         });
     }
 
-    const rect = searchWrapper.getBoundingClientRect();
+    searchBarFocused = true;
 
-    // Freeze the current visual position as fixed px coordinates first (no
-    // jump), fully taking over left/top/transform from the position classes
-    // (.horizontal-center / .vertical-center use `!important`, so plain
-    // inline styles would be overridden by them without also using
-    // `important` here).
-    searchWrapper.style.setProperty('position', 'fixed', 'important');
-    searchWrapper.style.setProperty('left', `${rect.left}px`, 'important');
-    searchWrapper.style.setProperty('top', `${rect.top}px`, 'important');
-    searchWrapper.style.setProperty('right', 'auto', 'important');
-    searchWrapper.style.setProperty('bottom', 'auto', 'important');
-    searchWrapper.style.setProperty('transform', 'none', 'important');
+    const rect = searchWrapper.getBoundingClientRect();
+    freezeSearchBarAt(rect);
 
     // Force layout so the browser registers the frozen starting point
     // before animating to the target, otherwise the transition is skipped.
     void searchWrapper.offsetHeight;
 
+    searchWrapper.style.removeProperty('z-index');
     searchWrapper.classList.add('focused');
     searchFocusOverlay.classList.add('active');
 
@@ -623,21 +636,40 @@ function focusSearchBar() {
 }
 
 function unfocusSearchBar() {
-    if (!savedSearchInlineStyles) return;
+    if (!savedSearchInlineStyles || !searchBarFocused) return;
+    searchBarFocused = false;
+    clearTimeout(searchUnfocusTimer);
 
-    restoreSearchInlineProp('left');
-    restoreSearchInlineProp('top');
-    restoreSearchInlineProp('right');
-    restoreSearchInlineProp('bottom');
-    restoreSearchInlineProp('transform');
+    const from = searchWrapper.getBoundingClientRect();
+
+    // Simply restoring the saved styles here would snap instead of animate:
+    // the resting position usually comes from the CSS classes as `auto` or a
+    // percentage against a different containing block, and neither `auto` nor
+    // a `position` change is interpolatable. So measure where the bar is
+    // supposed to land, then animate to those viewport px while still fixed.
+    // The restore/re-freeze pair happens within one task, so the intermediate
+    // state is never painted.
+    restoreAllSearchInlineProps();
+    const to = searchWrapper.getBoundingClientRect();
+
+    freezeSearchBarAt(from);
+    void searchWrapper.offsetHeight;
+
+    // Drop .focused now so its box-shadow fades along with the movement, but
+    // keep the stacking order until the bar is home so it does not slide
+    // behind the overlay that is fading out.
+    searchWrapper.style.setProperty('z-index', '950');
+    searchWrapper.classList.remove('focused');
     searchFocusOverlay.classList.remove('active');
 
-    clearTimeout(searchUnfocusTimer);
+    searchWrapper.style.setProperty('left', `${to.left}px`, 'important');
+    searchWrapper.style.setProperty('top', `${to.top}px`, 'important');
+
     searchUnfocusTimer = setTimeout(() => {
-        restoreSearchInlineProp('position');
-        searchWrapper.classList.remove('focused');
+        restoreAllSearchInlineProps();
+        searchWrapper.style.removeProperty('z-index');
         savedSearchInlineStyles = null;
-    }, 350);
+    }, SEARCH_ANIM_MS);
 }
 
 searchFocusOverlay.addEventListener('click', () => {
