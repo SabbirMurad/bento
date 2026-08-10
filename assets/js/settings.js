@@ -4,16 +4,52 @@
 const settingsOverlay = document.getElementById('settings-sidebar-overlay');
 const settingsBtn = document.querySelector('#settings-btn');
 
+// The settings button, the tabs, the align buttons and the clock style picker
+// are divs, list items and images with click handlers: unreachable by keyboard
+// and silent to a screen reader. They are styled as table cells and flex
+// children, so giving them button semantics here is safer than swapping the
+// elements and rebuilding the CSS around them.
+function makeActivatable(el, role, label) {
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', role);
+    if (label) el.setAttribute('aria-label', label);
+}
+
+// One delegated handler rather than a listener per control, so the position
+// panels and anything else built at runtime are keyboard-operable without
+// having to be wired up individually after they are generated.
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+
+    const control = e.target.closest('[role="button"][tabindex], [role="tab"][tabindex]');
+    if (!control) return;
+
+    e.preventDefault();
+    control.click();
+});
+
+makeActivatable(settingsBtn, 'button', 'Settings');
+settingsBtn.setAttribute('aria-expanded', 'false');
+
 settingsBtn.onclick = () => {
     settingsOverlay.classList.remove('hidden');
     settingsOverlay.classList.add('show');
+    settingsBtn.setAttribute('aria-expanded', 'true');
 };
 
+// Every path that closes the panel goes through here, so aria-expanded stays
+// truthful and focus returns to the button that opened it instead of being
+// dropped on the body.
+function closeSettings({ restoreFocus = false } = {}) {
+    if (!settingsOverlay.classList.contains('show')) return;
+    settingsOverlay.classList.remove('show');
+    settingsBtn.setAttribute('aria-expanded', 'false');
+    setTimeout(() => settingsOverlay.classList.add('hidden'), 250);
+    if (restoreFocus) settingsBtn.focus();
+}
+
 settingsOverlay.onclick = e => {
-    if (e.target === settingsOverlay) {
-        settingsOverlay.classList.remove('show');
-        setTimeout(() => settingsOverlay.classList.add('hidden'), 250);
-    }
+    if (e.target === settingsOverlay) closeSettings();
 };
 
 // ---------------------------
@@ -22,10 +58,7 @@ settingsOverlay.onclick = e => {
 document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
 
-    if (settingsOverlay.classList.contains('show')) {
-        settingsOverlay.classList.remove('show');
-        setTimeout(() => settingsOverlay.classList.add('hidden'), 250);
-    }
+    closeSettings({ restoreFocus: true });
 
     const shortcutOverlay = document.getElementById('shortcut-sidebar-overlay');
     if (shortcutOverlay.classList.contains('show')) {
@@ -120,7 +153,7 @@ document.querySelectorAll('#settings-sidebar .item.position').forEach(panel => {
         <div class="position-axis-row">
             <div class="align-btn-group">
                 ${axis.values.map((value, i) =>
-                    `<div class="icon" data-value="${value}"><img src="/assets/icon/${axis.icons[i]}.svg" alt=""></div>`
+                    `<div class="icon" data-value="${value}" role="button" tabindex="0" aria-pressed="false" aria-label="Align ${value.replace('-', ' ')}"><img src="/assets/icon/${axis.icons[i]}.svg" alt=""></div>`
                 ).join('')}
             </div>
             <div class="pos-inputs">
@@ -190,8 +223,12 @@ settingsItem.forEach((settingsItem) => {
         if (!icon) return;
         const group = icon.closest('.align-btn-group');
         if (group) {
-            group.querySelectorAll('.icon').forEach(i => i.classList.remove('active'));
+            group.querySelectorAll('.icon').forEach(i => {
+                i.classList.remove('active');
+                i.setAttribute('aria-pressed', 'false');
+            });
             icon.classList.add('active');
+            icon.setAttribute('aria-pressed', 'true');
         }
     }
 
@@ -343,13 +380,19 @@ const clockStyles = clockStyleWrapper.querySelectorAll('img');
 
 const DEFAULT_CLOCK_STYLE = 'clock-v1';
 
+clockStyleWrapper.setAttribute('role', 'group');
+clockStyleWrapper.setAttribute('aria-label', 'Clock style');
+clockStyles.forEach(style => makeActivatable(style, 'button', style.getAttribute('alt') || 'Clock style'));
+
 function applyClockStyle(clockName) {
     document.querySelectorAll('#clock-position-wrapper .clock-item').forEach(clock => {
         clock.style.display = clock.classList.contains(clockName) ? 'flex' : 'none';
     });
 
     clockStyles.forEach(style => {
-        style.classList.toggle('selected', style.getAttribute('clock-name') === clockName);
+        const selected = style.getAttribute('clock-name') === clockName;
+        style.classList.toggle('selected', selected);
+        style.setAttribute('aria-pressed', selected ? 'true' : 'false');
     });
 }
 
@@ -365,6 +408,13 @@ applyClockStyle(localStorage.getItem('clock-style') || DEFAULT_CLOCK_STYLE);
 
 const settingTabIcons = document.querySelectorAll('#settings-sidebar .tabs li');
 
+document.querySelector('#settings-sidebar .tabs').setAttribute('role', 'tablist');
+
+settingTabIcons.forEach(tab => {
+    makeActivatable(tab, 'tab');
+    tab.setAttribute('aria-selected', tab.classList.contains('active') ? 'true' : 'false');
+});
+
 settingTabIcons.forEach(icon => {
     icon.addEventListener('click', (e) => {
         let preSelectedTab = document.querySelector('#settings-sidebar .tabs li.active');
@@ -374,7 +424,9 @@ settingTabIcons.forEach(icon => {
         }
 
         preSelectedTab.classList.remove('active');
+        preSelectedTab.setAttribute('aria-selected', 'false');
         e.currentTarget.classList.add('active');
+        e.currentTarget.setAttribute('aria-selected', 'true');
 
         let tabName = e.currentTarget.getAttribute('setting-btn');
         let allItems = document.querySelectorAll('#settings-sidebar .item-wrapper');

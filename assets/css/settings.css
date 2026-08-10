@@ -1,3 +1,17 @@
+/* Keyboard focus has to be visible or reaching these controls with Tab is no
+   better than not reaching them. :focus-visible, so a mouse click does not
+   leave a ring behind. */
+#settings-sidebar [role="button"]:focus-visible,
+#settings-sidebar [role="tab"]:focus-visible,
+#settings-sidebar button:focus-visible,
+#settings-sidebar input:focus-visible,
+#settings-sidebar select:focus-visible,
+#settings-btn:focus-visible {
+  outline: 2px solid #1abc9c;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 .settings-container {
   position: absolute;
   right: 12px;
