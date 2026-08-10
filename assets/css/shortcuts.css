@@ -25,6 +25,19 @@
   cursor: pointer;
   /* border-radius: 12px; */
   border-radius: 8px;
+  /* Matches the lift on the settings button. */
+  scale: 1;
+  transition: scale 0.2s ease;
+}
+
+#shortcuts-wrapper .item:hover {
+  scale: 1.08;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #shortcuts-wrapper .item {
+    transition: none;
+  }
 }
 
 #shortcuts-wrapper .item .container {
