@@ -581,11 +581,9 @@ input::-moz-focus-outer {
   width: 100%;
 }
 
+/* No height cap: the list runs as long as it needs and the sidebar scrolls. */
 #settings-sidebar .google-item-list {
   width: 100%;
-  max-height: 420px;
-  overflow-y: auto;
-  padding-right: 6px;
 }
 
 #settings-sidebar .google-item-row {

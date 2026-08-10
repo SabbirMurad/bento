@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <style>
+    .ink { fill: #2b3038; }
+    .accent { fill: #1abc9c; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #ffffff; }
+    }
+  </style>
+  <rect class="ink" x="0.00" y="16.64" width="49.92" height="49.92" rx="9.98"/>
+  <rect class="ink" x="0.00" y="78.08" width="49.92" height="49.92" rx="9.98"/>
+  <rect class="ink" x="61.44" y="78.08" width="49.92" height="49.92" rx="9.98"/>
+  <rect class="accent" x="78.08" y="0.00" width="49.92" height="49.92" rx="9.98"/>
+</svg>

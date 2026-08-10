@@ -19,6 +19,10 @@ const ICONS = path.join(ROOT, 'assets', 'favicon');
 const INK = '#ffffff';
 const ACCENT = '#1abc9c';
 const SLATE = '#2b3038';
+// The PNG icons cannot follow the theme, so their ink is a mid tone that
+// holds up against both a white card and a near-black one. Slate looked
+// better on the Web Store but disappeared in dark mode.
+const MID = '#5b6472';
 
 // ---------------------------------------------------------------- geometry
 // One description of the mark, shared by the SVG writer and the rasteriser.
@@ -58,6 +62,28 @@ function markSvg(s, { ink = INK } = {}) {
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
 ${parts.join('\n')}
+</svg>
+`;
+}
+
+// An SVG favicon carries its own stylesheet, so this one is white on a dark
+// theme and slate on a light one. PNG icons cannot do this, which is why the
+// page links to the SVG directly.
+function adaptiveSvg(s) {
+    const m = markTiles(s);
+
+    const rect = t =>
+        `  <rect class="${t.fill === ACCENT ? 'accent' : 'ink'}" x="${t.x.toFixed(2)}" y="${t.y.toFixed(2)}" width="${t.w.toFixed(2)}" height="${t.h.toFixed(2)}" rx="${m.r.toFixed(2)}"/>`;
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+  <style>
+    .ink { fill: ${SLATE}; }
+    .accent { fill: ${ACCENT}; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: ${INK}; }
+    }
+  </style>
+${m.tiles.map(rect).join('\n')}
 </svg>
 `;
 }
@@ -179,13 +205,12 @@ fs.mkdirSync(BRAND, { recursive: true });
 // White for dark surfaces, slate for light ones.
 fs.writeFileSync(path.join(BRAND, 'logo.svg'), markSvg(128));
 fs.writeFileSync(path.join(BRAND, 'logo-dark.svg'), markSvg(128, { ink: SLATE }));
-console.log('wrote 2 svg files to assets/brand');
+// The page favicon, which unlike the PNGs can follow the theme.
+fs.writeFileSync(path.join(BRAND, 'icon.svg'), adaptiveSvg(128));
+console.log('wrote 3 svg files to assets/brand');
 
-// The extension icons use the slate ink: with no plate behind them they sit
-// straight on chrome://extensions and the Web Store listing, and both of
-// those are light.
 for (const size of [16, 32, 48, 128]) {
-    const png = encodePng(size, rasterise(size, SLATE));
+    const png = encodePng(size, rasterise(size, MID));
     fs.writeFileSync(path.join(ICONS, `icon${size}.png`), png);
     console.log(`wrote assets/favicon/icon${size}.png (${png.length} bytes)`);
 }
