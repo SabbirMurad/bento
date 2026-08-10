@@ -90,6 +90,12 @@ body.arranging .arrange-target * {
   pointer-events: none;
 }
 
+/* The Google panel opens on hover of the wrapper itself, so it would spring
+   open under the cursor the moment you reached for the button. */
+body.arranging #google-wrapper .item-container {
+  display: none;
+}
+
 body.arranging .arrange-target:hover {
   outline-color: #1abc9c;
 }

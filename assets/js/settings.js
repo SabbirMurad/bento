@@ -160,9 +160,17 @@ settingsItem.forEach((settingsItem) => {
         let saved = localStorage.getItem(contentId + '-position');
 
         if (!saved) {
-            // Set default active icons based on current element state
-            const hDefault = actualContentWrapper.classList.contains('horizontal-center') ? 'horizontal-center' : 'left';
-            const vDefault = actualContentWrapper.classList.contains('vertical-center') ? 'vertical-center' : 'bottom';
+            // Which edge the widget's own CSS anchors it to, declared in the
+            // markup. It cannot be read off the element: an absolutely
+            // positioned box resolves left and top to pixels even when the
+            // stylesheet only ever set right and bottom.
+            const hDefault = actualContentWrapper.classList.contains('horizontal-center')
+                ? 'horizontal-center'
+                : positionControlWrapper.getAttribute('default-horizontal') || 'left';
+            const vDefault = actualContentWrapper.classList.contains('vertical-center')
+                ? 'vertical-center'
+                : positionControlWrapper.getAttribute('default-vertical') || 'bottom';
+
             setActiveIcon(hDefault);
             setActiveIcon(vDefault);
             return;

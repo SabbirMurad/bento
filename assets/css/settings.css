@@ -34,6 +34,13 @@
   transition: opacity 0.25s ease;
 }
 
+/* .hidden only arrives once the fade finishes, so without this the overlay
+   keeps swallowing clicks on the page underneath for 250ms after it starts
+   closing — long enough to eat the first grab when entering arrange mode. */
+.settings-sidebar-overlay:not(.show) {
+  pointer-events: none;
+}
+
 .settings-sidebar-overlay.hidden {
   opacity: 0;
   pointer-events: none;
