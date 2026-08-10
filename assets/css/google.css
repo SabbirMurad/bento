@@ -32,6 +32,10 @@
   flex-wrap: wrap;
   justify-content: flex-start;
   row-gap: 24px;
+  /* The catalogue is long enough that a user who enables most of it would
+     otherwise push the panel off the bottom of the screen. */
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
   display: none;
 }
 
