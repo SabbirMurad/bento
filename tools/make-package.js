@@ -36,6 +36,7 @@ const INCLUDE = [
     'assets/js/background.js',
     'assets/js/google.js',
     'assets/js/arrange.js',
+    'assets/js/backup.js',
 ];
 
 function walk(rel) {

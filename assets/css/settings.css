@@ -1,3 +1,46 @@
+/* Shared by every plain button in the settings panel. */
+.settings-button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.settings-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+#settings-sidebar .backup-actions {
+  display: flex;
+  gap: 10px;
+}
+
+#settings-sidebar .settings-note {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+#settings-sidebar .settings-status {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  min-height: 1em;
+  color: #1abc9c;
+}
+
+#settings-sidebar .settings-status.error {
+  color: #ff6b6b;
+}
+
 /* Keyboard focus has to be visible or reaching these controls with Tab is no
    better than not reaching them. :focus-visible, so a mouse click does not
    leave a ring behind. */
