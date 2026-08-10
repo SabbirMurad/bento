@@ -100,6 +100,11 @@ for (let colorPicker of textColorPickers) {
 
 const settingsItem = document.querySelectorAll('#settings-sidebar .item-wrapper');
 
+// contentId -> { element, place() }. arrange.js drags a widget around the page
+// and calls place() so these controls and localStorage end up agreeing with
+// wherever it was dropped.
+const widgetPositionControls = new Map();
+
 settingsItem.forEach((settingsItem) => {
     const positionControlWrapper = settingsItem.querySelector('.item.position');
     if (!positionControlWrapper) return;
@@ -229,76 +234,59 @@ settingsItem.forEach((settingsItem) => {
         });
     })
 
+    // One place that moves a widget on an axis and leaves the align buttons,
+    // the number inputs and the element itself all saying the same thing.
+    // Both the buttons and the on-page drag go through here.
+    function setAxis(value, px) {
+        const horizontal = value === 'left' || value === 'right' || value === 'horizontal-center';
+        const centre = horizontal ? 'horizontal-center' : 'vertical-center';
+        const [nearInput, farInput] = horizontal
+            ? (value === 'left' ? [leftTextInput, rightTextInput] : [rightTextInput, leftTextInput])
+            : (value === 'top' ? [topTextInput, bottomTextInput] : [bottomTextInput, topTextInput]);
+
+        setActiveIcon(value);
+
+        if (value === centre) {
+            const [a, b] = horizontal ? ['left', 'right'] : ['top', 'bottom'];
+            actualContentWrapper.style[a] = 'unset';
+            actualContentWrapper.style[b] = 'unset';
+            actualContentWrapper.classList.add(centre);
+
+            (horizontal ? [leftTextInput, rightTextInput] : [topTextInput, bottomTextInput])
+                .forEach(input => {
+                    input.value = '';
+                    input.setAttribute('disabled', true);
+                });
+            return;
+        }
+
+        const opposite = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' }[value];
+        const offset = Math.round(px);
+
+        actualContentWrapper.classList.remove(centre);
+        actualContentWrapper.style[value] = offset + 'px';
+        actualContentWrapper.style[opposite] = 'unset';
+
+        nearInput.value = offset;
+        nearInput.removeAttribute('disabled');
+        farInput.value = '';
+        farInput.setAttribute('disabled', true);
+    }
+
     positionIcons.forEach(icon => {
         icon.addEventListener('click', (e) => {
-            let iconEl = e.currentTarget;
-            const group = iconEl.closest('.align-btn-group');
-            if (group) {
-                group.querySelectorAll('.icon').forEach(i => i.classList.remove('active'));
-                iconEl.classList.add('active');
-            }
-
-            let value = iconEl.getAttribute('data-value');
-
-            if (value === 'left') {
-                actualContentWrapper.style.left = '0';
-                actualContentWrapper.style.right = 'unset';
-                actualContentWrapper.classList.remove('horizontal-center');
-
-                leftTextInput.removeAttribute('disabled');
-                rightTextInput.setAttribute('disabled', true);
-                rightTextInput.value = '';
-            }
-            else if (value === 'right') {
-                actualContentWrapper.style.right = '0';
-                actualContentWrapper.style.left = 'unset';
-                actualContentWrapper.classList.remove('horizontal-center');
-
-                rightTextInput.removeAttribute('disabled');
-                leftTextInput.setAttribute('disabled', true);
-                leftTextInput.value = '';
-            }
-            else if (value === 'horizontal-center') {
-                actualContentWrapper.style.left = 'unset';
-                actualContentWrapper.style.right = 'unset';
-                actualContentWrapper.classList.add('horizontal-center');
-
-                leftTextInput.setAttribute('disabled', true);
-                rightTextInput.setAttribute('disabled', true);
-                leftTextInput.value = '';
-                rightTextInput.value = '';
-            }
-            else if (value === 'top') {
-                actualContentWrapper.style.top = '0';
-                actualContentWrapper.style.bottom = 'unset';
-                actualContentWrapper.classList.remove('vertical-center');
-
-                topTextInput.removeAttribute('disabled');
-                bottomTextInput.setAttribute('disabled', true);
-                bottomTextInput.value = '';
-            }
-            else if (value === 'bottom') {
-                actualContentWrapper.style.bottom = '0';
-                actualContentWrapper.style.top = 'unset';
-                actualContentWrapper.classList.remove('vertical-center');
-
-                bottomTextInput.removeAttribute('disabled');
-                topTextInput.setAttribute('disabled', true);
-                topTextInput.value = '';
-            }
-            else if (value === 'vertical-center') {
-                actualContentWrapper.style.top = 'unset';
-                actualContentWrapper.style.bottom = 'unset';
-                actualContentWrapper.classList.add('vertical-center');
-
-                topTextInput.setAttribute('disabled', true);
-                bottomTextInput.setAttribute('disabled', true);
-                topTextInput.value = '';
-                bottomTextInput.value = '';
-            }
-
+            setAxis(e.currentTarget.getAttribute('data-value'), 0);
             savePosition();
         });
+    });
+
+    widgetPositionControls.set(contentId, {
+        element: actualContentWrapper,
+        place(horizontal, horizontalPx, vertical, verticalPx) {
+            setAxis(horizontal, horizontalPx);
+            setAxis(vertical, verticalPx);
+            savePosition();
+        },
     });
 });
 

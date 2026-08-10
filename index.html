@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="assets/css/google.css">
     <link rel="stylesheet" href="assets/css/music-player.css">
     <link rel="stylesheet" href="assets/css/youtube_player.css">
+    <link rel="stylesheet" href="assets/css/arrange.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -178,6 +179,14 @@
             <img src="assets/icon/search.svg" alt="search">
             <input type="text" placeholder="Search ..." name="search" autocomplete="off">
             <div id="search-history-dropdown"></div>
+        </div>
+
+        <!-- Arrange mode: centre guides and the toolbar that dismisses it -->
+        <div id="arrange-guide-x"></div>
+        <div id="arrange-guide-y"></div>
+        <div id="arrange-bar" class="glass-card">
+            <span>Drag a widget to move it. It snaps to the centre lines.</span>
+            <button id="arrange-done" type="button">Done</button>
         </div>
 
         <!-- Settings -->
@@ -532,6 +541,10 @@
 
                 <div id="general-settings-wrapper" class="item-wrapper" item-name="general">
                     <div class="item">
+                        <span>Widget Positions</span>
+                        <button id="arrange-start" type="button">Arrange on page</button>
+                    </div>
+                    <div class="item">
                         <span>Glass Color</span>
                         <input type="color" id="glass-color-picker">
                         <input type="text" class="hex-input" id="glass-hex-input" placeholder="#0C0C0C" maxlength="7"
@@ -571,6 +584,8 @@
     <script src="assets/js/background-video.js"></script>
     <script src="assets/js/background.js"></script>
     <script src="assets/js/google.js"></script>
+    <!-- After settings.js: reads the position controls it registers. -->
+    <script src="assets/js/arrange.js"></script>
     <!-- The music / YouTube player is off. Re-enabling it needs more than
          these two tags: see the note at the top of service-worker.js. -->
     <!-- <script src="assets/js/music-player.js"></script> -->

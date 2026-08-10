@@ -1,0 +1,128 @@
+/* Arrange mode — drag widgets to position them. */
+
+#arrange-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(16px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 14px 12px 20px;
+  border-radius: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+body.arranging #arrange-bar {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+#arrange-bar span {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+}
+
+#arrange-bar button {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #10231f;
+  background: #1abc9c;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+#arrange-bar button:hover {
+  filter: brightness(1.1);
+}
+
+/* Centre lines, shown only while a widget is snapped to one. */
+#arrange-guide-x,
+#arrange-guide-y {
+  position: fixed;
+  z-index: 999;
+  background: #1abc9c;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+#arrange-guide-x {
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 100%;
+}
+
+#arrange-guide-y {
+  top: 50%;
+  left: 0;
+  height: 1px;
+  width: 100%;
+}
+
+#arrange-guide-x.on,
+#arrange-guide-y.on {
+  opacity: 0.9;
+}
+
+/* Only in arrange mode does a widget become a draggable object. Its contents
+   stop taking pointer events so a shortcut or bookmark cannot swallow the
+   drag or follow its link. */
+body.arranging .arrange-target {
+  cursor: grab;
+  outline: 1px dashed rgba(255, 255, 255, 0.45);
+  outline-offset: 6px;
+  border-radius: 4px;
+  transition: outline-color 0.2s ease;
+}
+
+body.arranging .arrange-target * {
+  pointer-events: none;
+}
+
+body.arranging .arrange-target:hover {
+  outline-color: #1abc9c;
+}
+
+body.arranging .arrange-target.arrange-dragging {
+  cursor: grabbing;
+  outline-color: #1abc9c;
+  outline-style: solid;
+}
+
+/* Settings entry point */
+#arrange-start {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+#arrange-start:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #arrange-bar,
+  #arrange-guide-x,
+  #arrange-guide-y {
+    transition: none;
+  }
+}
