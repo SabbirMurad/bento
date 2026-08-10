@@ -1,3 +1,5 @@
+// Not registered in manifest.json while the music / YouTube player is off.
+// See the note at the top of service-worker.js before re-enabling it.
 (function () {
   let video = null;
   let hooked = false;

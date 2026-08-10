@@ -22,7 +22,7 @@
         rel="stylesheet">
     <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com;"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;"
     >
 </head>
 
@@ -563,8 +563,9 @@
     <script src="assets/js/background-video.js"></script>
     <script src="assets/js/background.js"></script>
     <script src="assets/js/google.js"></script>
+    <!-- The music / YouTube player is off. Re-enabling it needs more than
+         these two tags: see the note at the top of service-worker.js. -->
     <!-- <script src="assets/js/music-player.js"></script> -->
-    <!-- <script src="https://www.youtube.com/iframe_api"></script> -->
     <!-- <script src="assets/js/youtube_player.js"></script> -->
 </body>
 

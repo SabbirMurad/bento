@@ -2,44 +2,17 @@
   "manifest_version": 3,
   "name": "New Tab",
   "version": "1.0",
-  "description": "Shows a clock in the center of the new tab page.",
-  "background": {
-    "service_worker": "service-worker.js"
-  },
+  "description": "A customisable new tab page with a clock, bookmarks, shortcuts and search.",
   "permissions": [
     "bookmarks",
     "storage",
-    "tabs",
-    "favicon",
-    "history",
-    "declarativeNetRequest"
+    "history"
   ],
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "https://www.youtube.com/embed/*"
-      ],
-      "js": [
-        "content-script.js"
-      ],
-      "run_at": "document_end"
-    }
-  ],
-  "sandbox": {
-    "pages": [
-      "player-sandbox.html"
-    ]
-  },
-  "host_permissions": [
-    "https://*/*",
-    "http://*/*"
-  ],
   "content_security_policy": {
-    "extension_pages_script-src": "self-script-src 'self' https://www.youtube.com;",
-    "extension_pages_frame-src": "self-frame-src 'self' https://www.youtube.com;"
+    "extension_pages": "script-src 'self'; object-src 'self'"
   },
   "icons": {
     "16": "assets/favicon/icon16.png",
