@@ -251,8 +251,9 @@
 
                 <div id="clock-settings-wrapper" class="item-wrapper" item-name="clock">
                     <div class="item">
+                        <span>Show Clock</span>
                         <label class="switch">
-                            <input type="checkbox">
+                            <input type="checkbox" data-widget-toggle="clock-position-wrapper">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -324,6 +325,13 @@
 
                 <div id="bookmark-settings-wrapper" class=" item-wrapper" item-name="bookmark">
                     <div class="item">
+                        <span>Show Bookmarks</span>
+                        <label class="switch">
+                            <input type="checkbox" data-widget-toggle="bookmark-container">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="item">
                         <span>Text Color</span>
                         <input type="color">
                         <input type="text" class="hex-input" placeholder="#FFFFFF" maxlength="7" spellcheck="false">
@@ -374,6 +382,13 @@
                 </div>
 
                 <div id="shortcut-settings-wrapper" class=" item-wrapper" item-name="shortcut">
+                    <div class="item">
+                        <span>Show Shortcuts</span>
+                        <label class="switch">
+                            <input type="checkbox" data-widget-toggle="shortcuts-wrapper">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <div class="item">
                         <span>Text Color</span>
                         <input type="color">
@@ -443,7 +458,7 @@
                     <div class="item">
                         <span>Show Search Bar</span>
                         <label class="switch">
-                            <input type="checkbox" id="search-toggle">
+                            <input type="checkbox" data-widget-toggle="search-wrapper">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -493,6 +508,13 @@
                 </div>
 
                 <div id="google-settings-wrapper" class=" item-wrapper" item-name="google">
+                    <div class="item">
+                        <span>Show Google Button</span>
+                        <label class="switch">
+                            <input type="checkbox" data-widget-toggle="google-wrapper">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     <div class="item">
                         <span>Text Color</span>
                         <input type="color">

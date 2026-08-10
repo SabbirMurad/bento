@@ -63,6 +63,12 @@ video {
   flex-direction: column;
 }
 
+/* Set by the widget visibility toggles. Important, because the widgets it
+   hides set their own display on an id selector. */
+.widget-hidden {
+  display: none !important;
+}
+
 .glass-card {
   padding: 30px;
   border-radius: 20px;

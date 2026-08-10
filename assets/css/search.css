@@ -5,16 +5,12 @@
      clock once the bar started showing by default. */
   bottom: 120px;
   padding: 0px 12px;
-  display: none;
+  display: flex;
   width: 684px;
   height: 40px;
   border-radius: 12px;
   align-items: center;
   transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1), top 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
-}
-
-#search-wrapper.visible {
-  display: flex;
 }
 
 #search-wrapper.focused {

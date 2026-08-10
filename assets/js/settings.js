@@ -415,22 +415,57 @@ settingTabIcons.forEach(icon => {
 })();
 
 // ---------------------------
-// Search bar toggle
+// Widget visibility
+//
+// A widget becomes hideable by putting data-widget-toggle="<id of the
+// element to hide>" on its checkbox. Adding one is a line of markup, not
+// another block of code down here.
 // ---------------------------
-const searchWrapper = document.getElementById('search-wrapper');
-const searchToggle = document.getElementById('search-toggle');
-const searchInput = searchWrapper.querySelector('input');
+const WIDGET_VISIBILITY_PREFIX = 'widget-visible:';
 
-// On by default: only an explicit opt-out hides the search bar.
-const searchVisible = localStorage.getItem('search-visible') !== 'false';
-searchWrapper.classList.toggle('visible', searchVisible);
-searchToggle.checked = searchVisible;
+// The search bar had its own key before this was generalised.
+const LEGACY_VISIBILITY_KEYS = { 'search-wrapper': 'search-visible' };
 
-searchToggle.addEventListener('change', () => {
-    const visible = searchToggle.checked;
-    searchWrapper.classList.toggle('visible', visible);
-    localStorage.setItem('search-visible', visible);
+function widgetVisibilityKey(targetId) {
+    return WIDGET_VISIBILITY_PREFIX + targetId;
+}
+
+function readWidgetVisibility(targetId) {
+    const key = widgetVisibilityKey(targetId);
+    const legacyKey = LEGACY_VISIBILITY_KEYS[targetId];
+
+    if (legacyKey && localStorage.getItem(key) === null) {
+        const saved = localStorage.getItem(legacyKey);
+        if (saved !== null) {
+            localStorage.setItem(key, saved);
+        }
+        localStorage.removeItem(legacyKey);
+    }
+
+    // Widgets show unless the user has turned them off.
+    return localStorage.getItem(key) !== 'false';
+}
+
+document.querySelectorAll('[data-widget-toggle]').forEach(input => {
+    const targetId = input.dataset.widgetToggle;
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    function apply(visible) {
+        target.classList.toggle('widget-hidden', !visible);
+        input.checked = visible;
+    }
+
+    apply(readWidgetVisibility(targetId));
+
+    input.addEventListener('change', () => {
+        localStorage.setItem(widgetVisibilityKey(targetId), input.checked);
+        apply(input.checked);
+    });
 });
+
+const searchWrapper = document.getElementById('search-wrapper');
+const searchInput = searchWrapper.querySelector('input');
 
 // ---------------------------
 // Shortcuts layout toggle (horizontal / vertical)
@@ -552,6 +587,7 @@ const SEARCH_POSITION_PROPS = ['position', 'left', 'top', 'right', 'bottom', 'tr
 const SEARCH_ANIM_MS = 350;
 let savedSearchInlineStyles = null;
 let searchBarFocused = false;
+let searchRestPosition = null;
 
 function restoreSearchInlineProp(prop) {
     const saved = savedSearchInlineStyles[prop];
@@ -601,6 +637,13 @@ function focusSearchBar() {
     searchBarFocused = true;
 
     const rect = searchWrapper.getBoundingClientRect();
+
+    // Remember where the bar rests so unfocus can animate back to it. Reading
+    // it again later would mean briefly restoring the real styles to measure
+    // them, and that round trip through `position: absolute` cancels the
+    // transition — the bar snaps home instead of sliding.
+    searchRestPosition = { left: rect.left, top: rect.top };
+
     freezeSearchBarAt(rect);
 
     // Force layout so the browser registers the frozen starting point
@@ -626,21 +669,6 @@ function unfocusSearchBar() {
     searchBarFocused = false;
     clearTimeout(searchUnfocusTimer);
 
-    const from = searchWrapper.getBoundingClientRect();
-
-    // Simply restoring the saved styles here would snap instead of animate:
-    // the resting position usually comes from the CSS classes as `auto` or a
-    // percentage against a different containing block, and neither `auto` nor
-    // a `position` change is interpolatable. So measure where the bar is
-    // supposed to land, then animate to those viewport px while still fixed.
-    // The restore/re-freeze pair happens within one task, so the intermediate
-    // state is never painted.
-    restoreAllSearchInlineProps();
-    const to = searchWrapper.getBoundingClientRect();
-
-    freezeSearchBarAt(from);
-    void searchWrapper.offsetHeight;
-
     // Drop .focused now so its box-shadow fades along with the movement, but
     // keep the stacking order until the bar is home so it does not slide
     // behind the overlay that is fading out.
@@ -648,8 +676,11 @@ function unfocusSearchBar() {
     searchWrapper.classList.remove('focused');
     searchFocusOverlay.classList.remove('active');
 
-    searchWrapper.style.setProperty('left', `${to.left}px`, 'important');
-    searchWrapper.style.setProperty('top', `${to.top}px`, 'important');
+    // Still `position: fixed` here, so this is a plain px-to-px move that the
+    // transition can interpolate. The real styles only go back once the bar
+    // has arrived, where swapping them in is invisible.
+    searchWrapper.style.setProperty('left', `${searchRestPosition.left}px`, 'important');
+    searchWrapper.style.setProperty('top', `${searchRestPosition.top}px`, 'important');
 
     searchUnfocusTimer = setTimeout(() => {
         restoreAllSearchInlineProps();
