@@ -16,28 +16,16 @@ const ROOT = path.resolve(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'dist');
 
 // Everything that ships. Directories are included whole.
+//
+// assets goes in wholesale rather than folder by folder. The old list named
+// each one, and assets/video was simply never added — so the three preset
+// backgrounds shipped as three 404s and a new install had no background at
+// all. A list you have to remember to extend is a list that will be wrong
+// again; the cost of shipping a spare file is nothing next to that.
 const INCLUDE = [
     'manifest.json',
     'index.html',
-    'assets/css',
-    'assets/font',
-    'assets/icon',
-    'assets/image',
-    'assets/favicon',
-    'assets/brand/icon.svg',
-    // Only the scripts index.html actually loads.
-    'assets/js/sync.js',
-    'assets/js/utils.js',
-    'assets/js/settings.js',
-    'assets/js/clock.js',
-    'assets/js/bookmark.js',
-    'assets/js/shortcuts.js',
-    'assets/js/background-video.js',
-    'assets/js/background.js',
-    'assets/js/google.js',
-    'assets/js/arrange.js',
-    'assets/js/backup.js',
-    'assets/js/console.js',
+    'assets',
 ];
 
 function walk(rel) {
@@ -63,18 +51,32 @@ const textFiles = files.filter(f => /\.(html|css|js|json)$/.test(f));
 
 textFiles.forEach(file => {
     // Comments are not references. index.html keeps the player's script tags
-    // commented out as the switch for turning it back on, and those files are
-    // deliberately not shipped. Block comments only: stripping // would eat
-    // the https:// in every url.
+    // commented out as the switch for turning it back on. Block comments
+    // only: stripping // would eat the https:// in every url.
     const body = fs.readFileSync(path.join(ROOT, file), 'utf8')
         .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/\/\*[\s\S]*?\*\//g, '');
 
-    const refs = body.match(/["'(]\/?((?:assets|manifest)[A-Za-z0-9_/.-]*\.[A-Za-z0-9]+)/g) || [];
+    // Backticks count. Leaving them out is how assets/video went unnoticed:
+    // background-video.js builds `assets/video/${name}.mp4`, and a check that
+    // only understood quoted strings never saw the reference at all.
+    const refs = body.match(/["'`(]\/?((?:assets|manifest)[A-Za-z0-9_/.-]*\.[A-Za-z0-9]+)/g) || [];
 
     refs.forEach(raw => {
         const ref = raw.slice(1).replace(/^\//, '');
         if (!packaged.has(ref)) problems.push(`${file} references ${ref}, which is not in the package`);
+    });
+
+    // A path with ${...} in it is only knowable as far as its last fixed
+    // slash, so check that much: the directory has to exist in the package
+    // even when the filename is decided at runtime.
+    const built = body.match(/["'`(]\/?(assets[A-Za-z0-9_/.-]*\/)(?=\$\{)/g) || [];
+
+    built.forEach(raw => {
+        const dir = raw.slice(1).replace(/^\//, '');
+        if (!files.some(f => f.startsWith(dir))) {
+            problems.push(`${file} builds paths under ${dir}, which is empty in the package`);
+        }
     });
 });
 
