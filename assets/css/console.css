@@ -42,6 +42,11 @@
   border-radius: 0;
   transform: translateX(100%);
   transition: transform 0.3s ease;
+  /* Twice the 6px .glass-card uses elsewhere: this panel sits over the whole
+     page and carries small monospace text, which needs the background pushed
+     further back to stay legible. */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   /* A stack that resolves locally — an extension page should not need the
      network to render its own monospace text. */
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
@@ -73,7 +78,7 @@
 
 #console-sidebar .console-header span {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 #console-output {
@@ -87,7 +92,7 @@
 }
 
 #console-output .console-line {
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff;
 }
 
 /* A blank line in a command's output is a deliberate gap, but an empty block
@@ -97,7 +102,7 @@
 }
 
 #console-output .console-line.command {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 #console-output .console-line.error {
@@ -105,7 +110,7 @@
 }
 
 #console-output .console-line.note {
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* The console reporting on itself rather than answering — same teal as the
