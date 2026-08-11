@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="assets/css/music-player.css">
     <link rel="stylesheet" href="assets/css/youtube_player.css">
     <link rel="stylesheet" href="assets/css/arrange.css">
+    <link rel="stylesheet" href="assets/css/console.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -189,9 +190,30 @@
             <button id="arrange-done" type="button">Done</button>
         </div>
 
+        <!-- Console -->
+        <div class="settings-container glass-card" id="console-btn">
+            <img src="assets/icon/terminal.svg" alt="console">
+        </div>
+
         <!-- Settings -->
         <div class="settings-container glass-card" id="settings-btn">
             <img src="assets/icon/setting.svg" alt="settings">
+        </div>
+
+        <!-- Console Sidebar Overlay -->
+        <div id="console-sidebar-overlay" class="console-sidebar-overlay hidden">
+            <div id="console-sidebar" class="sidebar glass-card">
+                <div class="console-header">
+                    <h1>CONSOLE</h1>
+                    <span>Esc to close</span>
+                </div>
+                <div id="console-output"></div>
+                <div class="console-input-row">
+                    <span class="prompt">&#10095;</span>
+                    <input id="console-input" type="text" autocomplete="off" autocorrect="off"
+                        autocapitalize="off" spellcheck="false" aria-label="Console command">
+                </div>
+            </div>
         </div>
 
         <!-- Sidebar Overlay -->
@@ -434,6 +456,8 @@
     <!-- After settings.js: reads the position controls it registers. -->
     <script src="assets/js/arrange.js"></script>
     <script src="assets/js/backup.js"></script>
+    <!-- After settings.js: uses makeActivatable for the button's semantics. -->
+    <script src="assets/js/console.js"></script>
     <!-- The music / YouTube player is off. Re-enabling it needs more than
          these two tags: see the note at the top of service-worker.js. -->
     <!-- <script src="assets/js/music-player.js"></script> -->
