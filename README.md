@@ -120,16 +120,16 @@ background set again.
 Site icons come from Google's public favicon service and the page fonts from
 Google Fonts. There is no account, no analytics and no server.
 
-## The dormant music player
+## The music player, removed
 
-`music-player.js`, `youtube_player.js`, `service-worker.js`,
-`content-script.js` and `player-sandbox.*` are in the repo but are not
-registered in the manifest and are not shipped. They are switched off, and
-the permissions they needed — host access to every site, plus
-`declarativeNetRequest` — are what made a new tab extension look like it
-modified browsing.
+There used to be a dormant music / YouTube player here — `music-player.js`,
+`youtube_player.js`, `service-worker.js`, `content-script.js` and
+`player-sandbox.*`. It is gone, not merely switched off.
 
-Turning it back on needs more than uncommenting the script tags in
-`index.html`; see the note at the top of `service-worker.js`. It also loads
-`youtube.com/iframe_api`, which is remote code and not allowed under MV3, so
-that needs solving first.
+It could not have come back as written. It loaded `youtube.com/iframe_api`,
+which is remote code and not allowed under MV3, and the permissions it
+needed — host access to every site plus `declarativeNetRequest` — are what
+made a new tab extension look like it modified browsing. Keeping the files
+around only meant shipping code a reviewer would ask about.
+
+The history is in git if any of it is ever wanted again.
