@@ -90,6 +90,12 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* A blank line in a command's output is a deliberate gap, but an empty block
+   has no line box and collapses to nothing. */
+#console-output .console-line:empty::before {
+  content: "\00a0";
+}
+
 #console-output .console-line.command {
   color: rgba(255, 255, 255, 0.55);
 }
