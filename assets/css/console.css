@@ -110,7 +110,10 @@ body.console-open #foreground {
 
 #console-output {
   flex: 1;
+  /* Still scrolls — wheel, trackpad and the auto-scroll after each command
+     all work — the bar itself is just noise on an otherwise bare screen. */
   overflow-y: auto;
+  scrollbar-width: none;
   padding: 16px 4px;
   display: flex;
   flex-direction: column;
@@ -118,6 +121,10 @@ body.console-open #foreground {
      meaning, so runs of spaces have to survive. */
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+#console-output::-webkit-scrollbar {
+  display: none;
 }
 
 /* Holds the output against the input rather than stranding a few lines at
