@@ -8,13 +8,15 @@
 // What the commands are built from
 // ---------------------------
 
-// Where a command that "opens" something sends you. Same tab, matching the
-// search bar: a new tab page is a place you pass through, and opening in a
-// new tab would leave an orphaned new tab behind on every command. Every
-// command goes through here, so switching to window.open is a one-line
-// change if that turns out to be the wrong call.
+// Where a command that "opens" something sends you: a new tab, so the
+// console survives the command and you can fire off several without coming
+// back. Every command goes through here.
+//
+// This runs inside the Enter keydown, so the popup blocker treats it as a
+// user gesture. A command that awaits something before opening would lose
+// that gesture and be blocked — call this first, then await.
 function openFromConsole(url) {
-    window.location.href = url;
+    window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 // chrome:// pages cannot be reached from a page script with a link or by
@@ -266,8 +268,9 @@ const CONSOLE_COMMANDS = {
             '',
             'This is a console for your new tab page. Type a command, press',
             'Enter, and it either prints something here or takes you somewhere.',
-            'ArrowUp walks back through what you have already typed, clear',
-            'empties the screen, and Escape closes the panel.',
+            'Ctrl+S opens this panel from anywhere on the page, ArrowUp walks',
+            'back through what you have already typed, clear empties the',
+            'screen, and Escape closes the panel.',
             '',
             'help lists everything it knows.',
         ],
@@ -410,6 +413,24 @@ consoleOverlay.addEventListener('click', e => {
 
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeConsole({ restoreFocus: true });
+});
+
+// Ctrl+S (Cmd+S on a Mac) opens the console from anywhere on the page,
+// including from inside the search bar. Chrome lets a page take this one, so
+// preventDefault stops the Save Page dialog appearing behind the panel — and
+// there is nothing on a new tab page worth saving anyway.
+document.addEventListener('keydown', e => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+    if (e.key.toLowerCase() !== 's') return;
+
+    e.preventDefault();
+
+    // Both sidebars are fixed overlays at the same depth, so leaving settings
+    // open would stack two sheets of translucent glass on top of each other.
+    if (typeof closeSettings === 'function') closeSettings();
+
+    // Already open: put the caret back in the input rather than doing nothing.
+    openConsole();
 });
 
 // Clicking anywhere in the panel puts the caret back in the input, the way a
