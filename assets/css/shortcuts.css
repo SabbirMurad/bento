@@ -72,8 +72,11 @@
   transition: opacity 0.25s ease;
 }
 
+/* Same as the settings overlay: .hidden arrives after the fade, so visibility
+   flips with it and the closed sidebar stops holding tab stops. */
 .shortcut-sidebar-overlay.hidden {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 

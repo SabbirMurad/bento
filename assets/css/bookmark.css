@@ -75,9 +75,12 @@
   width: 244px;
   z-index: 3;
   opacity: 0;
+  /* Keeps a closed folder's links out of the tab order — see the note on the
+     Google panel in google.css. */
+  visibility: hidden;
   pointer-events: none;
   transform: translateY(-6px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
 }
 
 #bookmark-container
@@ -100,6 +103,7 @@
 
 #bookmark-container .container .bookmark-folder > .bookmark-children.show {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
 }

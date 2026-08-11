@@ -12,12 +12,16 @@
   padding: 12px 14px 12px 20px;
   border-radius: 14px;
   opacity: 0;
+  /* Without this the Done button is a tab stop on a page that is not being
+     arranged — see the note on the Google panel in google.css. */
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
 }
 
 body.arranging #arrange-bar {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateX(-50%) translateY(0);
 }
@@ -90,9 +94,11 @@ body.arranging .arrange-target * {
   pointer-events: none;
 }
 
-/* The Google panel opens on click. A plain click (no drag) on the icon while
-   arranging still reaches its click handler before arrange.js's blocker can
-   stop it, so this hides the panel regardless of that toggle. */
+/* Two things already stop the icon's click handler while arranging: the rule
+   above makes the icon itself pointer-events: none, so the hit target is
+   #google-wrapper, and arrange.js blocks the click in the capture phase
+   anyway. This only covers the panel being left open when arrange mode is
+   entered — it would otherwise sit over the widget you are dragging. */
 body.arranging #google-wrapper .item-container {
   display: none;
 }

@@ -98,8 +98,12 @@
   pointer-events: none;
 }
 
+/* .hidden lands 250ms after the fade starts, by which time opacity is already
+   0, so visibility can flip with it — no transition needed. Without it the
+   closed sidebar keeps a dozen tab stops nobody can see. */
 .settings-sidebar-overlay.hidden {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 

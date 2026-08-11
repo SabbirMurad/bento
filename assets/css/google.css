@@ -42,14 +42,20 @@
   max-height: calc(100vh - 140px);
   overflow-y: auto;
   opacity: 0;
+  /* An element at opacity 0 is still focusable, so without this the closed
+     panel's links stay in the tab order and Tab lands on things nobody can
+     see. visibility holds its "visible" value for any non-zero progress, so
+     naming it here hides the panel only once the fade has finished. */
+  visibility: hidden;
   pointer-events: none;
   transform-origin: top right;
   transform: translateY(-6px) scale(0.98);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
 }
 
 #google-wrapper .item-container.open {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateY(0) scale(1);
 }
