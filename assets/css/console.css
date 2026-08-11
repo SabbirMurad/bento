@@ -182,7 +182,14 @@ body.console-open #foreground {
 }
 
 #console-output .console-line.command {
-  color: rgba(255, 255, 255, 0.75);
+  color: #ffffff;
+  margin: 16px 0 6px;
+  padding: 4px 8px;
+  background: rgba(26, 188, 156, 0.05);
+}
+
+#console-output .console-line.command:first-child {
+  margin-top: 0;
 }
 
 #console-output .console-line.error {

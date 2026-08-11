@@ -810,7 +810,9 @@ searchInput.addEventListener('keydown', e => {
         if (highlightIndex >= 0 && historyItems[highlightIndex]) {
             window.location.href = historyItems[highlightIndex].url;
         } else if (searchInput.value.trim()) {
-            window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(searchInput.value.trim());
+            // Routes through the user's chosen default search provider instead
+            // of hardcoding one, per the Chrome Web Store single-purpose policy.
+            chrome.search.query({ text: searchInput.value.trim(), disposition: 'CURRENT_TAB' });
         }
     }
 });

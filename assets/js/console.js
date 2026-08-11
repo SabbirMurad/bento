@@ -43,14 +43,16 @@ function openChromePage(url) {
 // Most of the list is one command with a different URL each time: take the
 // rest of the line, encode it, open a search page. Writing that out six times
 // invites six subtly different escaping bugs.
-function searchCommand(summary, buildUrl) {
+//
+// No query means "just take me there" rather than an error — typing `yt` to
+// open YouTube and browse around is a normal thing to want, not a mistake.
+function searchCommand(summary, buildUrl, homeUrl) {
     return {
         summary,
         group: 'Search the web',
         run(args) {
             const query = args.join(' ').trim();
-            if (!query) throw new Error('Give me something to search for.');
-            openFromConsole(buildUrl(encodeURIComponent(query)));
+            openFromConsole(query ? buildUrl(encodeURIComponent(query)) : homeUrl);
         },
     };
 }
@@ -399,12 +401,14 @@ const CONSOLE_COMMANDS = {
         run: (args, ctx) => ctx.clear(),
     },
 
-    google: searchCommand('Search Google', q => `https://www.google.com/search?q=${q}`),
-    yt: searchCommand('Search YouTube', q => `https://www.youtube.com/results?search_query=${q}`),
-    wiki: searchCommand('Search Wikipedia', q => `https://en.wikipedia.org/w/index.php?search=${q}`),
-    reddit: searchCommand('Search Reddit', q => `https://www.reddit.com/search/?q=${q}`),
-    insta: searchCommand('Search Instagram', q => `https://www.instagram.com/explore/search/keyword/?q=${q}`),
-    maps: searchCommand('Find a place on Google Maps', q => `https://www.google.com/maps/search/?api=1&query=${q}`),
+    google: searchCommand('Search Google', q => `https://www.google.com/search?q=${q}`, 'https://www.google.com/'),
+    yt: searchCommand('Search YouTube', q => `https://www.youtube.com/results?search_query=${q}`, 'https://www.youtube.com/'),
+    wiki: searchCommand('Search Wikipedia', q => `https://en.wikipedia.org/w/index.php?search=${q}`, 'https://en.wikipedia.org/'),
+    reddit: searchCommand('Search Reddit', q => `https://www.reddit.com/search/?q=${q}`, 'https://www.reddit.com/'),
+    insta: searchCommand('Search Instagram', q => `https://www.instagram.com/explore/search/keyword/?q=${q}`, 'https://www.instagram.com/'),
+    maps: searchCommand('Find a place on Google Maps', q => `https://www.google.com/maps/search/?api=1&query=${q}`, 'https://www.google.com/maps'),
+    amazon: searchCommand('Search a product on Amazon', q => `https://www.amazon.com/s?k=${q}`, 'https://www.amazon.com/'),
+    mdn: searchCommand('Search MDN', q => `https://developer.mozilla.org/en-US/search?q=${q}`, 'https://developer.mozilla.org/'),
 
     lh: {
         summary: 'Open localhost — port 8080 unless you name another',
@@ -667,6 +671,23 @@ const CONSOLE_COMMANDS = {
             'screen, and Escape closes the panel.',
             '',
             'help lists everything it knows.',
+        ],
+    },
+
+    dev: {
+        summary: 'Meet the developer, and where to find them',
+        group: 'The console',
+        run: () => [
+            "Hey, I'm Sabbir Hassan — I build Bento and other small,",
+            'opinionated tools for people who like their software tuned',
+            'exactly to how they use it. I build in public on YouTube, and',
+            'hang out with anyone who wants to talk code, design, or this',
+            'project on Discord.',
+            '',
+            'Portfolio   https://sabbirhassan.com',
+            'GitHub      https://github.com/sabbirmurad',
+            'YouTube     https://www.youtube.com/@itscompiletime',
+            'Discord     https://discord.gg/fJzH5ZS64g',
         ],
     },
 };
