@@ -1,4 +1,4 @@
-/* Console — a terminal-style sidebar for typed commands. */
+/* Console — a full-screen terminal for typed commands. */
 
 /* Sits directly above the settings button and borrows its look. The gear is
    30px tall inside 8px of padding and sits 24px from the bottom, so 78px
@@ -7,68 +7,95 @@
   bottom: 78px;
 }
 
-.console-sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: flex-end;
-  z-index: 500;
+/* The console owns the whole screen while it is open, so the page steps
+   aside rather than sitting blurred behind it. One element carries this
+   because #foreground is a single box; hiding its children individually
+   would mean an id-level rule overriding the transitions the widgets set on
+   themselves, which would break the hover scale on the buttons. */
+#foreground {
   transition: opacity 0.25s ease;
 }
 
-/* Same reasoning as the settings overlay: .hidden only lands once the fade
-   has finished, so without this the overlay eats clicks on the page beneath
-   it for 250ms, and its input stays a tab stop while shut. */
-.console-sidebar-overlay:not(.show) {
+/* visibility is named only in the open state, which is what makes it
+   asymmetric on purpose. Going out, it is part of the transition, so it holds
+   "visible" until the fade finishes. Coming back, the after-change style is
+   the rule above — no visibility in its transition — so it snaps to visible
+   at once and the console button can take focus in the same frame. Naming it
+   on both sides leaves the button unfocusable at progress 0, which silently
+   strands focus inside the console that just closed. */
+body.console-open #foreground {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s;
+}
+
+.console-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  justify-content: center;
+  /* 4px of blur alone does not carry this: over a bright wallpaper the white
+     text lands on white and disappears. The scrim does the legibility work so
+     the blur can stay light and the wallpaper still reads as yours. */
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity 0.25s ease;
+}
+
+/* .hidden only arrives once the fade finishes, so without this the overlay
+   keeps swallowing clicks on the page underneath for 250ms after it starts
+   closing, and its input stays a tab stop while shut. */
+.console-overlay:not(.show) {
   pointer-events: none;
 }
 
-.console-sidebar-overlay.hidden {
+.console-overlay.hidden {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
 
-#console-sidebar {
+/* A readable column rather than text stretched across an ultrawide monitor. */
+#console-screen {
   width: 100%;
-  max-width: 560px;
+  max-width: 900px;
   height: 100%;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  padding: 0 24px;
+  box-sizing: border-box;
   text-align: left;
-  border-radius: 0;
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-  /* Twice the 6px .glass-card uses elsewhere: this panel sits over the whole
-     page and carries small monospace text, which needs the background pushed
-     further back to stay legible. */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   /* A stack that resolves locally — an extension page should not need the
      network to render its own monospace text. */
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 13px;
   line-height: 1.65;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease 0.05s, transform 0.25s ease 0.05s;
 }
 
-.console-sidebar-overlay.show #console-sidebar {
-  transform: translateX(0);
+/* The screen settles in just after the backdrop, so the blur lands first and
+   the text arrives onto it rather than with it. */
+.console-overlay.show #console-screen {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-#console-sidebar .console-header {
+.console-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 20px 4px 14px 4px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   flex-shrink: 0;
 }
 
-#console-sidebar .console-header h1 {
+.console-header h1 {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
@@ -76,7 +103,7 @@
   color: #1abc9c;
 }
 
-#console-sidebar .console-header span {
+.console-header span {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.7);
 }
@@ -84,15 +111,26 @@
 #console-output {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px;
+  padding: 16px 4px;
+  display: flex;
+  flex-direction: column;
   /* Command output is the one place in this page where alignment carries
      meaning, so runs of spaces have to survive. */
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
+/* Holds the output against the input rather than stranding a few lines at
+   the top of a tall empty screen. margin-top on a ::before rather than
+   justify-content: flex-end, which makes the overflowing top unreachable. */
+#console-output::before {
+  content: "";
+  margin-top: auto;
+}
+
 #console-output .console-line {
   color: #ffffff;
+  flex-shrink: 0;
 }
 
 /* A blank line in a command's output is a deliberate gap, but an empty block
@@ -119,18 +157,24 @@
   color: rgba(26, 188, 156, 0.85);
 }
 
-#console-output .console-line .prompt {
-  color: #1abc9c;
-  user-select: none;
-}
-
 .console-input-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  gap: 10px;
+  margin-bottom: 40px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   flex-shrink: 0;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+/* The input has no focus ring of its own, and on a screen with nothing else
+   on it the caret alone is a thin thing to have to find. */
+.console-input-row:focus-within {
+  border-color: rgba(26, 188, 156, 0.6);
+  background: rgba(255, 255, 255, 0.09);
 }
 
 .console-input-row .prompt {
@@ -153,8 +197,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .console-sidebar-overlay,
-  #console-sidebar {
+  #foreground,
+  .console-overlay,
+  #console-screen {
     transition: none;
   }
 }

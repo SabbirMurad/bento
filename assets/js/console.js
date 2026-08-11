@@ -1,4 +1,4 @@
-// The console sidebar: type a command, get output.
+// The console: a full-screen terminal for typed commands.
 //
 // Everything below the registry is plumbing that does not care what the
 // commands are. To add one, put an entry in CONSOLE_COMMANDS — nothing else
@@ -393,7 +393,7 @@ const CONSOLE_COMMANDS = {
 CONSOLE_COMMANDS.hello = CONSOLE_COMMANDS.hi;
 
 const consoleBtn = document.getElementById('console-btn');
-const consoleOverlay = document.getElementById('console-sidebar-overlay');
+const consoleOverlay = document.getElementById('console-overlay');
 const consoleOutput = document.getElementById('console-output');
 const consoleInput = document.getElementById('console-input');
 
@@ -500,8 +500,10 @@ consoleBtn.setAttribute('aria-expanded', 'false');
 function openConsole() {
     consoleOverlay.classList.remove('hidden');
     consoleOverlay.classList.add('show');
+    // Takes the page off the screen for as long as the console is up.
+    document.body.classList.add('console-open');
     consoleBtn.setAttribute('aria-expanded', 'true');
-    // The panel slides in; focusing before it lands is harmless and means the
+    // The screen fades in; focusing before it lands is harmless and means the
     // first keystroke is never lost.
     consoleInput.focus();
 }
@@ -509,9 +511,19 @@ function openConsole() {
 function closeConsole({ restoreFocus = false } = {}) {
     if (!consoleOverlay.classList.contains('show')) return;
     consoleOverlay.classList.remove('show');
+    document.body.classList.remove('console-open');
     consoleBtn.setAttribute('aria-expanded', 'false');
     setTimeout(() => consoleOverlay.classList.add('hidden'), 250);
-    if (restoreFocus) consoleBtn.focus();
+
+    if (restoreFocus) {
+        // Dropping console-open snaps #foreground back to visible rather than
+        // transitioning it (see the note in console.css), but the class change
+        // is not in the computed style until something asks for layout. Skip
+        // this and focus() finds a still-hidden button, fails silently, and
+        // leaves focus on <body> for the next Tab to start over from.
+        void consoleBtn.offsetWidth;
+        consoleBtn.focus();
+    }
 }
 
 consoleBtn.addEventListener('click', () => {
@@ -548,7 +560,7 @@ document.addEventListener('keydown', e => {
 // Clicking anywhere in the panel puts the caret back in the input, the way a
 // terminal window behaves — but not when text is being selected for copying.
 consoleOverlay.addEventListener('mouseup', e => {
-    if (!e.target.closest('#console-sidebar')) return;
+    if (!e.target.closest('#console-screen')) return;
     if (e.target === consoleInput) return;
     if (!window.getSelection().isCollapsed) return;
     consoleInput.focus();

@@ -200,21 +200,6 @@
             <img src="assets/icon/setting.svg" alt="settings">
         </div>
 
-        <!-- Console Sidebar Overlay -->
-        <div id="console-sidebar-overlay" class="console-sidebar-overlay hidden">
-            <div id="console-sidebar" class="sidebar glass-card">
-                <div class="console-header">
-                    <h1>CONSOLE</h1>
-                    <span>Ctrl+S to open &middot; Esc to close</span>
-                </div>
-                <div id="console-output"></div>
-                <div class="console-input-row">
-                    <span class="prompt">&#10095;</span>
-                    <input id="console-input" type="text" autocomplete="off" autocorrect="off"
-                        autocapitalize="off" spellcheck="false" aria-label="Console command">
-                </div>
-            </div>
-        </div>
 
         <!-- Sidebar Overlay -->
         <div id="shortcut-sidebar-overlay" class="shortcut-sidebar-overlay hidden">
@@ -443,6 +428,26 @@
                 referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         </div> -->
     </section>
+
+    <!-- Console. Deliberately a sibling of #foreground rather than a child:
+         opening it hides #foreground wholesale, and a rule reaching into that
+         section to hide each widget would override the transitions they set
+         on themselves. -->
+    <div id="console-overlay" class="console-overlay hidden">
+        <div id="console-screen">
+            <div class="console-header">
+                <h1>CONSOLE</h1>
+                <span>Ctrl+S to open &middot; Esc to close</span>
+            </div>
+            <div id="console-output"></div>
+            <div class="console-input-row">
+                <span class="prompt">&#10095;</span>
+                <input id="console-input" type="text" autocomplete="off" autocorrect="off"
+                    autocapitalize="off" spellcheck="false" aria-label="Console command">
+            </div>
+        </div>
+    </div>
+
     <!-- First: patches localStorage so every later write mirrors to sync. -->
     <script src="assets/js/sync.js"></script>
     <script src="assets/js/utils.js"></script>
