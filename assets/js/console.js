@@ -46,6 +46,7 @@ function openChromePage(url) {
 function searchCommand(summary, buildUrl) {
     return {
         summary,
+        group: 'Search the web',
         run(args) {
             const query = args.join(' ').trim();
             if (!query) throw new Error('Give me something to search for.');
@@ -289,17 +290,51 @@ function validGithubName(name) {
 // run() may return a string, an array of lines, or a promise of either; it is
 // awaited, and anything it returns is printed as output. Returning nothing is
 // fine for a command that prints as it goes or has no output at all.
+// The order help prints its headings in, roughly most-used first. A command
+// whose group is missing from this list still gets printed, under its own
+// heading at the end — a typo in a group name should misfile a command, not
+// hide it.
+const CONSOLE_GROUP_ORDER = [
+    'Search the web',
+    'Open a page',
+    'This page',
+    'Work things out',
+    'The console',
+];
+
 const CONSOLE_COMMANDS = {
     help: {
         summary: 'List the commands you can run',
-        run: () => {
+        group: 'The console',
+        run: (args, ctx) => {
             const names = Object.keys(CONSOLE_COMMANDS).sort();
-            const width = Math.max(...names.map(name => name.length));
-            return names.map(name => `${name.padEnd(width + 2)}${CONSOLE_COMMANDS[name].summary}`);
+            // One width across every group, so the descriptions stay in a
+            // single column instead of stepping in and out per heading.
+            const width = Math.max(...names.map(name => name.length)) + 2;
+
+            const byGroup = new Map();
+            names.forEach(name => {
+                const group = CONSOLE_COMMANDS[name].group || 'Everything else';
+                if (!byGroup.has(group)) byGroup.set(group, []);
+                byGroup.get(group).push(name);
+            });
+
+            const ordered = [
+                ...CONSOLE_GROUP_ORDER.filter(group => byGroup.has(group)),
+                ...[...byGroup.keys()].filter(group => !CONSOLE_GROUP_ORDER.includes(group)).sort(),
+            ];
+
+            ordered.forEach((group, index) => {
+                if (index) ctx.print('');
+                ctx.print(group, 'heading');
+                byGroup.get(group).forEach(name =>
+                    ctx.print(`  ${name.padEnd(width)}${CONSOLE_COMMANDS[name].summary}`));
+            });
         },
     },
     clear: {
         summary: 'Empty the console',
+        group: 'The console',
         run: (args, ctx) => ctx.clear(),
     },
 
@@ -312,6 +347,7 @@ const CONSOLE_COMMANDS = {
 
     lh: {
         summary: 'Open localhost — port 8080 unless you name another',
+        group: 'Open a page',
         run(args) {
             const port = args[0] === undefined ? '8080' : args[0];
             if (!/^\d{1,5}$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
@@ -323,6 +359,7 @@ const CONSOLE_COMMANDS = {
 
     gh: {
         summary: 'GitHub — repos | -r <repo> | -s <person> | user <name>',
+        group: 'Open a page',
         run(args) {
             const [sub, ...rest] = args;
             const name = rest.join(' ').trim();
@@ -356,6 +393,7 @@ const CONSOLE_COMMANDS = {
 
     gmail: {
         summary: 'Gmail inbox, or "gmail to <address>" to start a message',
+        group: 'Open a page',
         run(args) {
             if (!args.length) return openFromConsole('https://mail.google.com/mail/u/0/#inbox');
 
@@ -372,16 +410,19 @@ const CONSOLE_COMMANDS = {
 
     history: {
         summary: "Open Chrome's history page",
+        group: 'Open a page',
         run: () => openChromePage('chrome://history'),
     },
 
     bookmarks: {
         summary: "Open Chrome's bookmark manager",
+        group: 'Open a page',
         run: () => openChromePage('chrome://bookmarks'),
     },
 
     calc: {
         summary: 'Work out a sum, e.g. calc 25*40',
+        group: 'Work things out',
         run(args) {
             const expression = args.join(' ');
             if (!expression.trim()) throw new Error('Give me something to work out.');
@@ -391,6 +432,7 @@ const CONSOLE_COMMANDS = {
 
     timestamp: {
         summary: 'Print this exact moment, several ways',
+        group: 'Work things out',
         run() {
             const now = new Date();
             return [
@@ -404,16 +446,19 @@ const CONSOLE_COMMANDS = {
 
     show: {
         summary: 'Turn a widget on, e.g. show clock',
+        group: 'This page',
         run: args => setWidgetVisible(args.join(' '), true),
     },
 
     hide: {
         summary: 'Turn a widget off, e.g. hide clock',
+        group: 'This page',
         run: args => setWidgetVisible(args.join(' '), false),
     },
 
     bg: {
         summary: 'Backgrounds — list | set <name or id> | upload',
+        group: 'This page',
         async run(args) {
             const [sub, ...rest] = args;
             const query = rest.join(' ');
@@ -449,6 +494,7 @@ const CONSOLE_COMMANDS = {
 
     crypto: {
         summary: 'Look up a coin, e.g. crypto btc',
+        group: 'Work things out',
         async run(args, ctx) {
             const query = args.join(' ').trim();
             if (!query) throw new Error('Name a coin, e.g. crypto btc');
@@ -485,6 +531,7 @@ const CONSOLE_COMMANDS = {
 
     hi: {
         summary: 'Say hello, and hear what this thing does',
+        group: 'The console',
         run: () => [
             'Hello.',
             '',

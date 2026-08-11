@@ -147,6 +147,13 @@ body.console-open #foreground {
   color: #fd4b4b;
 }
 
+/* Group headings in help. Full teal against the launch line's 0.85, so the
+   two teal roles do not read as the same thing. */
+#console-output .console-line.heading {
+  color: #1abc9c;
+  font-weight: 600;
+}
+
 #console-output .console-line.note {
   color: rgba(255, 255, 255, 0.7);
 }
