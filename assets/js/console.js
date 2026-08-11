@@ -651,7 +651,9 @@ consoleInput.addEventListener('keydown', e => {
 // ---------------------------
 // Open/close
 // ---------------------------
-makeActivatable(consoleBtn, 'button', 'Console');
+// The tooltip is a ::after, which a screen reader may not announce, so the
+// shortcut goes in the label too.
+makeActivatable(consoleBtn, 'button', 'Console (Ctrl+S)');
 consoleBtn.setAttribute('aria-expanded', 'false');
 
 function openConsole() {
