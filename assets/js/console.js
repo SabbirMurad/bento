@@ -196,6 +196,71 @@ function formatPercent(value) {
     return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
 }
 
+// The settings checkboxes are already the record of what can be hidden: each
+// carries data-widget-toggle="<id to hide>" and sits inside the settings
+// panel named after it. Reading the vocabulary off them means a widget added
+// later is nameable here without anyone remembering to come back.
+function widgetToggles() {
+    const byName = new Map();
+    document.querySelectorAll('[data-widget-toggle]').forEach(input => {
+        const panel = input.closest('[item-name]');
+        const name = panel ? panel.getAttribute('item-name') : input.dataset.widgetToggle;
+        byName.set(name.toLowerCase(), input);
+    });
+    return byName;
+}
+
+function findWidget(query) {
+    const toggles = widgetToggles();
+    const wanted = query.trim().toLowerCase();
+    if (!wanted) return null;
+
+    // The panel is named "shortcut" but "shortcuts" is what anyone types.
+    for (const candidate of [wanted, wanted.replace(/s$/, ''), `${wanted}s`]) {
+        if (toggles.has(candidate)) return { name: candidate, input: toggles.get(candidate) };
+    }
+    return null;
+}
+
+function setWidgetVisible(query, visible) {
+    const found = findWidget(query);
+    if (!found) {
+        const names = [...widgetToggles().keys()].sort().join(', ');
+        throw new Error(query.trim()
+            ? `No widget called "${query.trim()}". Try one of: ${names}.`
+            : `Name a widget: ${names}.`);
+    }
+
+    const state = visible ? 'on' : 'off';
+    if (found.input.checked === visible) return `${found.name} is already ${state}.`;
+
+    found.input.checked = visible;
+    // Dispatching change rather than writing the storage key here means the
+    // settings panel, the page and the saved value cannot drift apart — this
+    // goes through exactly the path clicking the checkbox does.
+    found.input.dispatchEvent(new Event('change'));
+    return `${found.name} is now ${state}.`;
+}
+
+// Backgrounds live in IndexedDB with both presets and uploads in one store,
+// so a name is friendlier than the uuid an upload gets.
+function pickBackground(videos, query) {
+    const wanted = query.trim().toLowerCase();
+
+    const byId = videos.find(video => (video.id || '').toLowerCase() === wanted);
+    if (byId) return byId;
+
+    const exact = videos.find(video => (video.name || '').toLowerCase() === wanted);
+    if (exact) return exact;
+
+    const partial = videos.filter(video => (video.name || '').toLowerCase().includes(wanted));
+    if (partial.length === 1) return partial[0];
+    if (partial.length > 1) {
+        throw new Error(`"${query.trim()}" matches ${partial.length}: ${partial.map(v => v.name).join(', ')}.`);
+    }
+    throw new Error(`No background called "${query.trim()}". Run bg list to see them.`);
+}
+
 // gh repos and gh -r act on *your* repositories, so they need to know who you
 // are. There is no way to ask GitHub that without signing in, so it is stored
 // once and syncs with the rest of the settings.
@@ -334,6 +399,51 @@ const CONSOLE_COMMANDS = {
                 `iso       ${now.toISOString()}`,
                 `local     ${now.toString()}`,
             ];
+        },
+    },
+
+    show: {
+        summary: 'Turn a widget on, e.g. show clock',
+        run: args => setWidgetVisible(args.join(' '), true),
+    },
+
+    hide: {
+        summary: 'Turn a widget off, e.g. hide clock',
+        run: args => setWidgetVisible(args.join(' '), false),
+    },
+
+    bg: {
+        summary: 'Backgrounds — list | set <name or id> | upload',
+        async run(args) {
+            const [sub, ...rest] = args;
+            const query = rest.join(' ');
+
+            if (sub === 'upload') {
+                // Straight away, not after an await: a file picker spends the
+                // same user activation window.open does, and awaiting first
+                // would leave nothing to spend.
+                videoInput.click();
+                return 'Pick a video to use as the background.';
+            }
+
+            // The note says "bg lists"; both read naturally, so take either.
+            if (sub === 'list' || sub === 'lists') {
+                const [videos, selectedId] = await Promise.all([loadAllVideos(), getSelectedVideoId()]);
+                if (!videos.length) return 'No backgrounds stored yet — bg upload adds one.';
+
+                const width = Math.max(...videos.map(video => (video.name || '').length)) + 2;
+                return videos.map(video =>
+                    `${video.id === selectedId ? '*' : ' '} ${(video.name || '').padEnd(width)}${video.type.padEnd(9)}${video.id}`);
+            }
+
+            if (sub === 'set') {
+                if (!query.trim()) throw new Error('bg set needs a name or id.');
+                const video = pickBackground(await loadAllVideos(), query);
+                await selectVideo(video);
+                return `Background set to ${video.name}.`;
+            }
+
+            throw new Error(`bg: "${sub || ''}" is not one of list, set, upload.`);
         },
     },
 
