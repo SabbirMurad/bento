@@ -27,6 +27,19 @@
   padding: 0;
 }
 
+/* The page itself never scrolls. Everything sits inside one 100vh box, and
+   the panels that can outgrow the screen — settings, the console, the Google
+   list — scroll themselves.
+   Without this, a closed bookmark flyout raises both scrollbars: it is hidden
+   but still laid out, 244px wide, pinned under its folder, and a nested one
+   under a right-hand folder reaches a couple of hundred pixels past the edge.
+   Open flyouts are unaffected, since bookmark.js flips them back on screen
+   before showing them. */
+html,
+body {
+  overflow: hidden;
+}
+
 body {
   --clock-text-color: #ffffff;
   --bookmark-text-color: #ffffff;
