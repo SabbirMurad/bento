@@ -243,6 +243,67 @@ function setWidgetVisible(query, visible) {
     return `${found.name} is now ${state}.`;
 }
 
+// The clock style picker in settings already names all eleven faces in its
+// alt text and pairs each with its class, so read them off it rather than
+// keeping a second list that could fall behind clock.js.
+function clockStyleOptions() {
+    return [...document.querySelectorAll('.clock-style-wrapper img[clock-name]')].map(img => ({
+        id: img.getAttribute('clock-name'),
+        label: img.getAttribute('alt') || img.getAttribute('clock-name'),
+        el: img,
+    }));
+}
+
+function findClockStyle(query) {
+    const wanted = query.trim().toLowerCase();
+    if (!wanted) return null;
+
+    // "Day arc", "clock-v10", "v10" and "10" should all land on the same face.
+    const asVersion = /^v?(\d{1,2})$/.exec(wanted);
+    const id = asVersion ? `clock-v${asVersion[1]}` : wanted;
+
+    const options = clockStyleOptions();
+    return options.find(option => option.id.toLowerCase() === id)
+        || options.find(option => option.label.toLowerCase() === wanted)
+        || null;
+}
+
+// chrome.storage holds the shortcuts, and it is missing whenever this runs as
+// a plain page rather than an installed extension.
+function requireShortcutStorage() {
+    if (!globalThis.chrome || !chrome.storage || !chrome.storage.sync) {
+        throw new Error('Shortcuts are only reachable once this is installed as an extension.');
+    }
+}
+
+async function readShortcuts() {
+    requireShortcutStorage();
+    const { shortcuts } = await chrome.storage.sync.get('shortcuts');
+    return shortcuts || [];
+}
+
+// Accepts the position from "shortcut list", the stored url, or enough of the
+// domain to be unambiguous — nobody wants to retype a url to delete it.
+function pickShortcut(shortcuts, query) {
+    const wanted = query.trim().toLowerCase();
+
+    const position = /^\d+$/.test(wanted) ? Number(wanted) : null;
+    if (position !== null) {
+        if (position < 1 || position > shortcuts.length) {
+            throw new Error(`There is no shortcut ${position}. Run shortcut list.`);
+        }
+        return shortcuts[position - 1];
+    }
+
+    const exact = shortcuts.find(url => url.toLowerCase() === wanted);
+    if (exact) return exact;
+
+    const partial = shortcuts.filter(url => url.toLowerCase().includes(wanted));
+    if (partial.length === 1) return partial[0];
+    if (partial.length > 1) throw new Error(`"${query.trim()}" matches ${partial.length}: ${partial.join(', ')}.`);
+    throw new Error(`No shortcut matches "${query.trim()}". Run shortcut list.`);
+}
+
 // Backgrounds live in IndexedDB with both presets and uploads in one store,
 // so a name is friendlier than the uuid an upload gets.
 function pickBackground(videos, query) {
@@ -360,6 +421,7 @@ const CONSOLE_COMMANDS = {
     gh: {
         summary: 'GitHub — repos | -r <repo> | -s <person> | user <name>',
         group: 'Open a page',
+        complete: ['repos', '-r', '-s', 'user'],
         run(args) {
             const [sub, ...rest] = args;
             const name = rest.join(' ').trim();
@@ -394,6 +456,7 @@ const CONSOLE_COMMANDS = {
     gmail: {
         summary: 'Gmail inbox, or "gmail to <address>" to start a message',
         group: 'Open a page',
+        complete: ['to'],
         run(args) {
             if (!args.length) return openFromConsole('https://mail.google.com/mail/u/0/#inbox');
 
@@ -447,18 +510,80 @@ const CONSOLE_COMMANDS = {
     show: {
         summary: 'Turn a widget on, e.g. show clock',
         group: 'This page',
+        complete: () => [...widgetToggles().keys()].sort(),
         run: args => setWidgetVisible(args.join(' '), true),
     },
 
     hide: {
         summary: 'Turn a widget off, e.g. hide clock',
         group: 'This page',
+        complete: () => [...widgetToggles().keys()].sort(),
         run: args => setWidgetVisible(args.join(' '), false),
+    },
+
+    clock: {
+        summary: 'Clock faces — clock list, or clock <name>',
+        group: 'This page',
+        complete: () => clockStyleOptions().map(option => option.label),
+        run(args) {
+            const query = args.join(' ').trim();
+            const current = localStorage.getItem('clock-style') || 'clock-v1';
+
+            if (!query || query.toLowerCase() === 'list') {
+                const options = clockStyleOptions();
+                const width = Math.max(...options.map(option => option.label.length)) + 2;
+                return options.map(option =>
+                    `${option.id === current ? '*' : ' '} ${option.label.padEnd(width)}${option.id}`);
+            }
+
+            const style = findClockStyle(query);
+            if (!style) throw new Error(`No clock face called "${query}". Run clock list.`);
+            if (style.id === current) return `Clock is already ${style.label}.`;
+
+            // The picker's own click handler saves the choice and swaps the
+            // face; going through it keeps settings and the page in step.
+            style.el.click();
+            return `Clock set to ${style.label}.`;
+        },
+    },
+
+    shortcut: {
+        summary: 'Shortcuts — list | add <url> | rm <url or number>',
+        group: 'This page',
+        complete: ['list', 'add', 'rm'],
+        async run(args) {
+            const [sub, ...rest] = args;
+            const query = rest.join(' ').trim();
+
+            if (!sub || sub === 'list') {
+                const shortcuts = await readShortcuts();
+                if (!shortcuts.length) return 'No shortcuts yet — shortcut add <url> makes one.';
+                const width = String(shortcuts.length).length;
+                return shortcuts.map((url, index) => `${String(index + 1).padStart(width)}  ${url}`);
+            }
+
+            if (sub === 'add') {
+                if (!query) throw new Error('shortcut add needs a url.');
+                requireShortcutStorage();
+                const { url, added } = await addShortcut(query);
+                return added ? `Added ${url}.` : `${url} is already there.`;
+            }
+
+            if (sub === 'rm') {
+                if (!query) throw new Error('shortcut rm needs a url or a number from shortcut list.');
+                const url = pickShortcut(await readShortcuts(), query);
+                await removeShortcut(url);
+                return `Removed ${url}.`;
+            }
+
+            throw new Error(`shortcut: "${sub}" is not one of list, add, rm.`);
+        },
     },
 
     bg: {
         summary: 'Backgrounds — list | set <name or id> | upload',
         group: 'This page',
+        complete: ['list', 'set', 'upload'],
         async run(args) {
             const [sub, ...rest] = args;
             const query = rest.join(' ');
@@ -634,8 +759,75 @@ function recallConsoleLine(step) {
         consoleInput.value.length, consoleInput.value.length));
 }
 
+// ---------------------------
+// Tab completion
+// ---------------------------
+// A command declares `complete` as an array of words or a function returning
+// one, and it applies to the word after the command name. Deeper positions
+// are left alone: the things worth completing there — background names, coin
+// ids — come from IndexedDB or the network, and a completion that has to wait
+// is worse than none.
+function completionFor(value) {
+    const trailingSpace = /\s$/.test(value);
+    const words = value.trim() ? value.trim().split(/\s+/) : [];
+
+    // Still typing the command name.
+    if (words.length === 0 || (words.length === 1 && !trailingSpace)) {
+        const prefix = words[0] || '';
+        return {
+            prefix,
+            options: Object.keys(CONSOLE_COMMANDS)
+                .filter(name => name.startsWith(prefix.toLowerCase()))
+                .sort(),
+        };
+    }
+
+    const command = CONSOLE_COMMANDS[words[0].toLowerCase()];
+    if (!command || !command.complete) return { prefix: '', options: [] };
+    // Only the argument straight after the command name.
+    if (words.length > 2 || (words.length === 2 && trailingSpace)) return { prefix: '', options: [] };
+
+    const all = typeof command.complete === 'function' ? command.complete() : command.complete;
+    const prefix = trailingSpace ? '' : words[1];
+    return {
+        prefix,
+        options: all.filter(option => option.toLowerCase().startsWith(prefix.toLowerCase())).sort(),
+    };
+}
+
+function longestCommonPrefix(options) {
+    let prefix = options[0] || '';
+    options.forEach(option => {
+        while (prefix && !option.toLowerCase().startsWith(prefix.toLowerCase())) {
+            prefix = prefix.slice(0, -1);
+        }
+    });
+    return prefix;
+}
+
+function completeConsoleInput() {
+    const value = consoleInput.value;
+    const { prefix, options } = completionFor(value);
+    if (!options.length) return;
+
+    // One match finishes the word and moves on; several fill in as far as
+    // they agree, the way a shell does.
+    const completion = options.length === 1 ? `${options[0]} ` : longestCommonPrefix(options);
+
+    if (completion.length > prefix.length) {
+        consoleInput.value = value.slice(0, value.length - prefix.length) + completion;
+    } else if (options.length > 1) {
+        // Nothing left to fill in, so show what is still on the table.
+        printConsoleLine(options.join('  '), 'note');
+    }
+}
+
 consoleInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Tab') {
+        // Otherwise Tab leaves the input for the next focusable thing.
+        e.preventDefault();
+        completeConsoleInput();
+    } else if (e.key === 'Enter') {
         const line = consoleInput.value;
         consoleInput.value = '';
         runConsoleLine(line);

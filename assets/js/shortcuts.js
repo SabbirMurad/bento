@@ -87,6 +87,26 @@ loadShortcuts();
 // ---------------------------
 // Remove shortcut
 // ---------------------------
+// Shared by the sidebar's input and the console's "shortcut add", so the two
+// cannot drift. Normalising before the duplicate check matters: comparing the
+// raw text but storing the normalised form let "github.com" be added again
+// and again, since the stored "https://github.com" never matched it.
+async function addShortcut(url) {
+    const full = addHttpToUrl(url.trim());
+
+    let { shortcuts } = await chrome.storage.sync.get("shortcuts");
+    if (!shortcuts) shortcuts = [];
+
+    if (shortcuts.includes(full)) return { url: full, added: false };
+
+    shortcuts.push(full);
+    await chrome.storage.sync.set({ shortcuts });
+    loadShortcuts();
+
+    return { url: full, added: true };
+}
+
+
 async function removeShortcut(url) {
     let { shortcuts } = await chrome.storage.sync.get("shortcuts");
     if (!shortcuts) shortcuts = [];
@@ -177,14 +197,7 @@ const urlInput = document.querySelector('#shortcut-sidebar-overlay #shortcut-url
 urlInput.addEventListener('keypress', async (e) => {
     const url = e.target.value.trim();
     if (e.key === "Enter" && url) {
-        let { shortcuts } = await chrome.storage.sync.get("shortcuts");
-        if (!shortcuts) shortcuts = [];
-
-        if (!shortcuts.includes(url)) shortcuts.push(addHttpToUrl(url));
-
-        await chrome.storage.sync.set({ shortcuts });
-
-        loadShortcuts();
+        await addShortcut(url);
         urlInput.value = '';
     }
 })
