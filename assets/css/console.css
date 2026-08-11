@@ -108,6 +108,12 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
+/* The console reporting on itself rather than answering — same teal as the
+   prompt, so it reads as the panel talking, not as command output. */
+#console-output .console-line.launch {
+  color: rgba(26, 188, 156, 0.85);
+}
+
 #console-output .console-line .prompt {
   color: #1abc9c;
   user-select: none;

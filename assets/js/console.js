@@ -17,6 +17,15 @@
 // that gesture and be blocked — call this first, then await.
 function openFromConsole(url) {
     window.open(url, '_blank', 'noopener,noreferrer');
+    reportLaunch(url);
+}
+
+// A command that opens a tab otherwise leaves the console looking as though
+// nothing happened — the new tab may not even have focus yet. Printing the
+// URL also shows what the command actually built, which is the difference
+// between "that did nothing" and "I typed the wrong thing".
+function reportLaunch(url) {
+    printConsoleLine(`Launched in new tab: ${url}`, 'launch');
 }
 
 // chrome:// pages cannot be reached from a page script with a link or by
@@ -28,6 +37,7 @@ function openChromePage(url) {
         throw new Error('Chrome pages are only reachable once this is installed as an extension.');
     }
     chrome.tabs.create({ url });
+    reportLaunch(url);
 }
 
 // Most of the list is one command with a different URL each time: take the
