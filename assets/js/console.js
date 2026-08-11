@@ -130,6 +130,72 @@ function evaluateExpression(input) {
     return result;
 }
 
+// CoinGecko rather than the CoinCap endpoint the notes pointed at: CoinCap's
+// v2 host no longer resolves and its v3 replacement answers 401 without an
+// API key, and a key shipped inside an extension is a published key. This
+// needs no key, and it sends Access-Control-Allow-Origin: *, so it works
+// under plain CORS without a host permission in the manifest — which matters
+// for a listing that has already been rejected once over permissions.
+const COINGECKO = 'https://api.coingecko.com/api/v3';
+
+async function coinGecko(path) {
+    let response;
+    try {
+        response = await fetch(`${COINGECKO}${path}`);
+    } catch {
+        // fetch only rejects for network-level failures, never for a 4xx.
+        throw new Error('Could not reach CoinGecko. Are you online?');
+    }
+    if (response.status === 429) throw new Error('CoinGecko is rate limiting. Give it a minute.');
+    if (!response.ok) throw new Error(`CoinGecko answered ${response.status}.`);
+    return response.json();
+}
+
+// "btc" matches a long tail of wrapped, bridged and imitation tokens, so an
+// exact ticker with the largest market cap beats whatever the search happens
+// to return first.
+function pickCoinMatch(coins, query) {
+    const wanted = query.trim().toLowerCase();
+    const byRank = list => list
+        .filter(coin => typeof coin.market_cap_rank === 'number')
+        .sort((a, b) => a.market_cap_rank - b.market_cap_rank);
+
+    const byId = coins.filter(coin => (coin.id || '').toLowerCase() === wanted);
+    const bySymbol = coins.filter(coin => (coin.symbol || '').toLowerCase() === wanted);
+
+    return byId[0] || byRank(bySymbol)[0] || bySymbol[0] || byRank(coins)[0] || coins[0];
+}
+
+function formatUsd(value) {
+    if (typeof value !== 'number') return '—';
+
+    // A meme coin's price and its daily change both sit far below a cent, so
+    // a fixed number of decimals renders every one of them as $0.00. Scale
+    // the precision to the magnitude instead, keeping three digits past the
+    // leading zeros, and let maximumFractionDigits trim the trailing ones.
+    const magnitude = Math.abs(value);
+    const decimals = magnitude === 0 || magnitude >= 1
+        ? 2
+        : Math.min(18, Math.ceil(-Math.log10(magnitude)) + 3);
+
+    return value.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: decimals,
+    });
+}
+
+function formatCompactUsd(value) {
+    if (typeof value !== 'number') return '—';
+    return '$' + value.toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 2 });
+}
+
+function formatPercent(value) {
+    if (typeof value !== 'number') return '—';
+    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+}
+
 // gh repos and gh -r act on *your* repositories, so they need to know who you
 // are. There is no way to ask GitHub that without signing in, so it is stored
 // once and syncs with the rest of the settings.
@@ -267,6 +333,42 @@ const CONSOLE_COMMANDS = {
                 `unix ms   ${now.getTime()}`,
                 `iso       ${now.toISOString()}`,
                 `local     ${now.toString()}`,
+            ];
+        },
+    },
+
+    crypto: {
+        summary: 'Look up a coin, e.g. crypto btc',
+        async run(args, ctx) {
+            const query = args.join(' ').trim();
+            if (!query) throw new Error('Name a coin, e.g. crypto btc');
+
+            // Two round trips over a slow connection is long enough that the
+            // panel would otherwise look like it had ignored the command.
+            ctx.print(`Looking up ${query}…`, 'note');
+
+            const found = await coinGecko(`/search?query=${encodeURIComponent(query)}`);
+            const match = pickCoinMatch(found.coins || [], query);
+            if (!match) throw new Error(`Nothing on CoinGecko matches "${query}".`);
+
+            const markets = await coinGecko(
+                `/coins/markets?vs_currency=usd&ids=${encodeURIComponent(match.id)}`);
+            const coin = markets[0];
+            if (!coin) throw new Error(`CoinGecko has no market data for ${match.name}.`);
+
+            const rows = [
+                ['price', formatUsd(coin.current_price)],
+                ['24h', `${formatPercent(coin.price_change_percentage_24h)}  (${formatUsd(coin.price_change_24h)})`],
+                ['24h range', `${formatUsd(coin.low_24h)} – ${formatUsd(coin.high_24h)}`],
+                ['market cap', `${formatCompactUsd(coin.market_cap)}${coin.market_cap_rank ? `  (rank ${coin.market_cap_rank})` : ''}`],
+                ['volume 24h', formatCompactUsd(coin.total_volume)],
+                ['all-time high', `${formatUsd(coin.ath)}  (${formatPercent(coin.ath_change_percentage)})`],
+            ];
+            const width = Math.max(...rows.map(([label]) => label.length)) + 2;
+
+            return [
+                `${coin.name} (${(coin.symbol || '').toUpperCase()})`,
+                ...rows.map(([label, value]) => `${label.padEnd(width)}${value}`),
             ];
         },
     },
