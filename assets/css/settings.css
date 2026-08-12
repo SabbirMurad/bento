@@ -80,6 +80,54 @@
   height: 20px;
 }
 
+/* The shortcut is the fastest way into either panel, and nothing else on the
+   page announces it. Reads its label off the button so the two stay in step,
+   and lives here rather than in console.css because both buttons are
+   .settings-container.
+
+   Absolute, so it does not become a flex item and shove the icon off centre,
+   and it opens leftward — the buttons sit against the right edge and the page
+   no longer scrolls to reveal anything past it. */
+.settings-container[data-shortcut]::after {
+  content: attr(data-shortcut);
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(12, 12, 12, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    visibility 0.18s;
+}
+
+.settings-container[data-shortcut]:hover::after,
+.settings-container[data-shortcut]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-container[data-shortcut]::after {
+    transition: none;
+  }
+}
+
 /* Dark transparent overlay */
 .settings-sidebar-overlay {
   position: fixed;
@@ -108,54 +156,113 @@
 }
 
 /* Sidebar Panel */
+/* A rail beside the panes, not a strip above them. The old tab bar was a
+   fixed table: seven equal columns across 598px left 61px of text per cell,
+   which already clipped "Background" and "Bookmark", and an eighth tab would
+   have taken every label down to 50px. Height is the axis with room to
+   spare in a sidebar, so the tabs run down it and a ninth costs nothing. */
 #settings-sidebar {
   width: 100%;
-  max-width: 598px;
+  /* The panes' old 598 plus the rail's 180, so the content is exactly as wide
+     as it was when the tabs sat on top. Still width:100% underneath, so a
+     narrow window shrinks it as it always did. */
+  max-width: 778px;
   height: calc(100% - 2px);
   padding: 0px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   transform: translateX(100%);
   transition: transform 0.3s ease;
   border-radius: 0px;
-  align-items: flex-start;
-  overflow-y: auto;
+  align-items: stretch;
+  /* The panes scroll, not the sidebar — that is what stops the tabs
+     disappearing off the top of a long list like Google's. */
+  overflow: hidden;
 }
 
 #settings-sidebar .tabs {
-  display: table;
-  table-layout: fixed;
-  width: 100%;
-  margin: 12px 0 24px 0;
+  /* Percentage of the sidebar, floored and capped: the sidebar is width:100%
+     under its max-width, so on a narrow window a fixed 180px rail would eat
+     the panes. The cap is what binds at full width; the percentage only
+     takes over below ~600px. */
+  flex: 0 0 clamp(132px, 30%, 180px);
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
 
-  > li {
-    transition-duration: 0.25s;
-    display: table-cell;
-    list-style: none;
-    text-align: center;
-    padding: 12px;
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-    color: white;
-    font-weight: 400;
-    border: 1px solid rgba(255, 255, 255, 0);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    transition: all 0.25s ease;
-    border-radius: 8px 8px 0 0;
-    &:hover {
-      &:before {
-        -webkit-transform: translateY(70%);
-        transform: translateY(70%);
-      }
-    }
+#settings-sidebar .tabs > li {
+  position: relative;
+  list-style: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  /* A long tab name now truncates with an ellipsis instead of being sliced
+     mid-letter by overflow: hidden on a table cell. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
 
-    &.active {
-      color: #1abc9c;
-      font-weight: 600;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-bottom: 1px solid rgba(255, 255, 255, 0);
-    }
+#settings-sidebar .tabs > li:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+}
+
+#settings-sidebar .tabs > li.active {
+  background: rgba(26, 188, 156, 0.14);
+  color: #1abc9c;
+  font-weight: 600;
+}
+
+/* The marker the folder-tab border used to carry, moved to the edge that
+   now faces the content. */
+#settings-sidebar .tabs > li.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  border-radius: 0 3px 3px 0;
+  background: #1abc9c;
+}
+
+#settings-sidebar .tabs > li:focus-visible {
+  outline: 2px solid rgba(26, 188, 156, 0.65);
+  outline-offset: -2px;
+}
+
+#settings-sidebar .settings-panes {
+  flex: 1;
+  /* Without this the google list — the widest thing in any pane — sets the
+     flex item's automatic minimum size and shoves the rail off the edge. */
+  min-width: 0;
+  overflow-y: auto;
+  padding-top: 12px;
+  /* .glass-card centres its text, which is right for the clock card it was
+     written for and wrong for a column of form rows — it was centring the
+     backup note while every label beside it sat left. */
+  text-align: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #settings-sidebar,
+  #settings-sidebar .tabs > li {
+    transition: none;
   }
 }
 
@@ -164,30 +271,46 @@
   transform: translateX(0);
 }
 
+/* Full width so every pane measures the same, which is what keeps the toggle
+   switches on one line down the panel however you switch tabs. Held
+   explicitly rather than left to the block default: the panes used to be
+   flex items of the sidebar and shrank to their own widest control, putting
+   the right edge of the clock pane 250px past the search pane's. */
 #settings-sidebar .item-wrapper {
   margin-bottom: 36px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 18px;
   display: none;
+  width: 100%;
+  box-sizing: border-box;
   padding: 0 20px;
 }
 
-#settings-sidebar .item-wrapper p {
+/* Section headings. :not([class]) because a bare element selector under an id
+   outranks .settings-note's own rule — the backup note was asking for 11px
+   and rendering at 16px, which is why a footnote came out the size of the
+   heading above it. Classed paragraphs style themselves. */
+#settings-sidebar .item-wrapper p:not([class]) {
   font-size: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 #settings-sidebar #general-settings-wrapper {
   display: flex;
 }
 
+/* Spacing between rows has one owner: the wrapper's gap. It used to be split
+   between that gap and a margin-bottom here, so every row carried 30px and
+   the two rules had to be corrected against each other row type by row type.
+   The gap inside an item separates a label from the control it names. */
 #settings-sidebar .item-wrapper .item {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-bottom: 18px;
+  gap: 10px;
+  margin-bottom: 0;
 }
 
 /* Position Controls */
@@ -334,7 +457,6 @@ input[type="color"]::-webkit-color-swatch {
   flex-direction: row;
   align-items: center;
   gap: 12px;
-  margin-bottom: 10px;
 }
 
 #settings-sidebar .item-wrapper .item:has(input[type="color"]) > p,
@@ -709,56 +831,104 @@ input::-moz-focus-outer {
   cursor: pointer;
 }
 
-/* From Uiverse.io by mrhyddenn */
-/* The switch - the box around the slider */
+/* Toggle switches */
+
+/* A switch and its label are one statement, so they sit on one line with the
+   switch pushed to the far edge — the same shape as the colour rows above,
+   which is why the type matches them. Stacked, the switch landed directly
+   under its own label with nothing separating them, and every row looked
+   like the start of the next one. */
+#settings-sidebar .item-wrapper .item:has(.switch) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+#settings-sidebar .item-wrapper .item:has(.switch) > p,
+#settings-sidebar .item-wrapper .item:has(.switch) > span {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
 .switch {
-  font-size: 17px;
   position: relative;
   display: inline-block;
-  width: 48px;
-  height: 18px;
+  flex-shrink: 0;
+  width: 42px;
+  height: 22px;
+  cursor: pointer;
 }
 
-/* Hide default HTML checkbox */
+/* Still a tab stop and still focusable — the ring is drawn on .slider below,
+   since the input itself has no box to hang one on. */
 .switch input {
-  opacity: 1;
+  position: absolute;
+  opacity: 0;
   width: 0;
   height: 0;
+  margin: 0;
 }
 
-/* The slider */
 .slider {
   position: absolute;
+  inset: 0;
+  box-sizing: border-box;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0px;
-  background: #fff;
-  transition: 0.4s;
-  border-radius: 30px;
-  border: 1px solid #ccc;
+  border-radius: 999px;
+  /* The off state is the sidebar's own surface — same translucent white and
+     border as the hex inputs and the align buttons — rather than the solid
+     #fff pill, which was brighter than anything else in the panel. */
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
-.slider:before {
-  position: absolute;
+.switch:hover .slider {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.slider::before {
   content: "";
-  height: 16px;
+  position: absolute;
+  top: 2px;
+  left: 2px;
   width: 16px;
-  border-radius: 16px;
-  left: 1.2px;
-  top: 0;
-  bottom: 0;
-  background-color: white;
-  box-shadow: 0 2px 5px #999999;
-  transition: 0.4s;
+  height: 16px;
+  border-radius: 50%;
+  /* Dimmed while off. A bright knob on a dark panel is the loudest thing in
+     the row, which is backwards for a setting that is switched off. */
+  background: rgba(255, 255, 255, 0.55);
+  transition:
+    transform 0.22s cubic-bezier(0.32, 0.72, 0, 1),
+    background 0.22s ease;
 }
 
-input:checked + .slider {
-  background-color: #5fdd54;
-  border: 1px solid transparent;
+/* The teal the rest of the page uses for "this is on" — the accent on the
+   google checkboxes, the console prompt, the focused hex input. */
+.switch input:checked + .slider {
+  background: #1abc9c;
+  border-color: #1abc9c;
 }
 
-input:checked + .slider:before {
-  transform: translateX(29px);
+.switch input:checked + .slider::before {
+  /* 40px of track inside the border, less the 16px knob and its 2px inset. */
+  transform: translateX(20px);
+  background: #ffffff;
+}
+
+.switch input:focus-visible + .slider {
+  box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slider,
+  .slider::before {
+    transition: none;
+  }
 }

@@ -525,6 +525,55 @@ const CONSOLE_COMMANDS = {
         run: args => setWidgetVisible(args.join(' '), false),
     },
 
+    adjust: {
+        summary: 'Drag the widgets around the page',
+        group: 'This page',
+        run() {
+            // The console covers the page it is about to ask you to rearrange,
+            // so it gets out of the way — the same thing the Arrange on page
+            // button does to the settings sidebar.
+            closeConsole();
+            setArranging(true);
+            // Printed for when the console comes back, not to be read now.
+            return 'Adjust mode on. Drag a widget to move it, Escape when done.';
+        },
+    },
+
+    quote: {
+        summary: 'The quote — quote, quote set <text>, quote clear',
+        group: 'This page',
+        complete: ['set', 'clear'],
+        run(args) {
+            const action = (args[0] || '').toLowerCase();
+
+            // Bare "quote" reads it back. Split, because the settings box
+            // takes newlines and each one is its own console line.
+            if (!action) {
+                const current = readQuoteText();
+                return current ? current.split('\n') : 'No quote set. Try: quote set <text>';
+            }
+
+            if (action === 'clear') {
+                if (!readQuoteText()) return 'There is no quote to clear.';
+                setQuoteText('');
+                return 'Quote cleared.';
+            }
+
+            if (action !== 'set') {
+                throw new Error(`quote: no such action "${args[0]}". Try quote, quote set <text> or quote clear.`);
+            }
+
+            // Everything after "set" is the quote, spaces and all. Runs of
+            // whitespace collapse — the line was split on /\s+/ to find the
+            // command — which is what you would want typing a sentence anyway.
+            const text = args.slice(1).join(' ').trim();
+            if (!text) throw new Error('Give it some words: quote set <text>');
+
+            setQuoteText(text);
+            return `Quote set to: ${text}`;
+        },
+    },
+
     clock: {
         summary: 'Clock faces — clock list, or clock <name>',
         group: 'This page',
@@ -666,7 +715,7 @@ const CONSOLE_COMMANDS = {
             '',
             'This is a console for your new tab page. Type a command, press',
             'Enter, and it either prints something here or takes you somewhere.',
-            'Ctrl+S opens this panel from anywhere on the page, ArrowUp walks',
+            'Ctrl+K opens this panel from anywhere on the page, ArrowUp walks',
             'back through what you have already typed, clear empties the',
             'screen, and Escape closes the panel.',
             '',
@@ -694,6 +743,8 @@ const CONSOLE_COMMANDS = {
 
 // Aliases share the entry, so they cannot drift apart.
 CONSOLE_COMMANDS.hello = CONSOLE_COMMANDS.hi;
+// The button in settings calls it Arrange on page, so that word has to work too.
+CONSOLE_COMMANDS.arrange = CONSOLE_COMMANDS.adjust;
 
 const consoleBtn = document.getElementById('console-btn');
 const consoleOverlay = document.getElementById('console-overlay');
@@ -705,6 +756,35 @@ const CONSOLE_PROMPT = '❯';
 // ---------------------------
 // Output
 // ---------------------------
+// Trailing punctuation is deliberately left outside the match: a url at the
+// end of a sentence should not carry the full stop into the address bar.
+const CONSOLE_URL = /https?:\/\/[^\s<>"']*[^\s<>"'.,;:!?)\]]/g;
+
+// Urls the console prints are worth a click — dev is otherwise four addresses
+// you have to select and copy by hand. Done here rather than per command, so
+// every line that mentions one gets it, including the launch feedback.
+function appendConsoleText(parent, text) {
+    let last = 0;
+
+    for (const match of text.matchAll(CONSOLE_URL)) {
+        // Guarded because append('') still makes a text node, and one text
+        // node is enough to defeat :empty — which is what gives a blank
+        // output line its height.
+        if (match.index > last) parent.append(text.slice(last, match.index));
+
+        const link = document.createElement('a');
+        link.href = match[0];
+        link.textContent = match[0];
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        parent.append(link);
+
+        last = match.index + match[0].length;
+    }
+
+    if (last < text.length) parent.append(text.slice(last));
+}
+
 function printConsoleLine(text, kind = 'output') {
     const line = document.createElement('div');
     line.className = `console-line ${kind}`;
@@ -715,7 +795,7 @@ function printConsoleLine(text, kind = 'output') {
         prompt.textContent = `${CONSOLE_PROMPT} `;
         line.append(prompt, document.createTextNode(text));
     } else {
-        line.textContent = text;
+        appendConsoleText(line, text);
     }
 
     consoleOutput.appendChild(line);
@@ -866,7 +946,7 @@ consoleInput.addEventListener('keydown', e => {
 // ---------------------------
 // The tooltip is a ::after, which a screen reader may not announce, so the
 // shortcut goes in the label too.
-makeActivatable(consoleBtn, 'button', 'Console (Ctrl+S)');
+makeActivatable(consoleBtn, 'button', 'Console (Ctrl+K)');
 consoleBtn.setAttribute('aria-expanded', 'false');
 
 function openConsole() {
@@ -911,13 +991,15 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeConsole({ restoreFocus: true });
 });
 
-// Ctrl+S (Cmd+S on a Mac) opens the console from anywhere on the page,
-// including from inside the search bar. Chrome lets a page take this one, so
-// preventDefault stops the Save Page dialog appearing behind the panel — and
-// there is nothing on a new tab page worth saving anyway.
+// Ctrl+K (Cmd+K on a Mac) opens the console from anywhere on the page,
+// including from inside the search bar — the same key every other command
+// palette uses. Chrome does not reserve it, so preventDefault holds.
+//
+// Not Ctrl+Tab: Chrome keeps that one for switching browser tabs and a page
+// cannot cancel it, so the tab would change out from under the panel.
 document.addEventListener('keydown', e => {
     if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
-    if (e.key.toLowerCase() !== 's') return;
+    if (e.key.toLowerCase() !== 'k') return;
 
     e.preventDefault();
 

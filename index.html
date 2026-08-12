@@ -1,422 +1,724 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>New Tab</title>
     <!-- SVG so the mark can follow the theme; the PNG icons in the manifest
          cannot, and are a mid tone that survives either. -->
-    <link rel="icon" type="image/svg+xml" href="assets/brand/icon.svg">
-    <link rel="stylesheet" href="assets/css/font.css">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/settings.css">
-    <link rel="stylesheet" href="assets/css/clock.css">
-    <link rel="stylesheet" href="assets/css/search.css">
-    <link rel="stylesheet" href="assets/css/shortcuts.css">
-    <link rel="stylesheet" href="assets/css/bookmark.css">
-    <link rel="stylesheet" href="assets/css/google.css">
-    <link rel="stylesheet" href="assets/css/arrange.css">
-    <link rel="stylesheet" href="assets/css/console.css">
+    <link rel="icon" type="image/svg+xml" href="assets/brand/icon.svg" />
+    <link rel="stylesheet" href="assets/css/font.css" />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <link rel="stylesheet" href="assets/css/settings.css" />
+    <link rel="stylesheet" href="assets/css/clock.css" />
+    <link rel="stylesheet" href="assets/css/search.css" />
+    <link rel="stylesheet" href="assets/css/shortcuts.css" />
+    <link rel="stylesheet" href="assets/css/bookmark.css" />
+    <link rel="stylesheet" href="assets/css/google.css" />
+    <link rel="stylesheet" href="assets/css/quote.css" />
+    <link rel="stylesheet" href="assets/css/arrange.css" />
+    <link rel="stylesheet" href="assets/css/console.css" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&family=Orbitron:wght@400..900&display=swap"
-        rel="stylesheet">
+      href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&family=Orbitron:wght@400..900&display=swap"
+      rel="stylesheet"
+    />
     <meta
-    http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.coingecko.com;"
-    >
-</head>
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.coingecko.com;"
+    />
+  </head>
 
-<body>
+  <body>
     <video id="bg-video" autoplay loop muted></video>
     <div id="blur-bg"></div>
     <section id="foreground">
-
-        <!-- Clock -->
-        <div id="clock-position-wrapper" class="horizontal-center">
-            <div id="clock-wrapper" class="glass-card clock-item clock-v1">
-                <div id="clock"></div>
-                <div id="date"></div>
-            </div>
-
-            <div id="analog-clock-wrapper" class=" clock-item clock-v2">
-                <div class="clock">
-                    <!-- Numbers -->
-                    <div class="mark m1"></div>
-                    <div class="mark m2"></div>
-                    <div class="mark m4"></div>
-                    <div class="mark m5"></div>
-                    <div class="mark m7"></div>
-                    <div class="mark m8"></div>
-                    <div class="mark m10"></div>
-                    <div class="mark m11"></div>
-
-                    <div class="number n12">12</div>
-                    <div class="number n3">3</div>
-                    <div class="number n6">6</div>
-                    <div class="number n9">9</div>
-
-                    <div class="hand hour" id="hour"></div>
-                    <div class="hand minute" id="minute"></div>
-                    <div class="hand second" id="second"></div>
-                    <div class="center-dot"></div>
-                </div>
-            </div>
-
-            <div id="digital-clock-v2-wrapper" class=" clock-item clock-v3">
-                <div id="glow-clock">
-                    <p class="date">2026-01-02 FRI</p>
-                    <p class="time">15:17:53</p>
-                </div>
-            </div>
-
-            <div id="stack-clock-wrapper" class="clock-item clock-v4">
-                <div class="stack-time">
-                    <span class="stack-hours">09</span>
-                    <span class="stack-minutes">41</span>
-                </div>
-                <div class="stack-progress"><span></span></div>
-                <div class="stack-foot">
-                    <span class="stack-meridiem">AM</span>
-                    <span class="rule"></span>
-                    <span class="stack-date">Mon 10 Aug</span>
-                </div>
-            </div>
-
-            <!-- Digits are built by clock.js: each needs four panels. -->
-            <div id="flip-clock-wrapper" class="clock-item clock-v5">
-                <div class="flip-group" data-unit="hours"></div>
-                <div class="flip-group" data-unit="minutes"></div>
-                <div class="flip-group small" data-unit="seconds"></div>
-                <div class="flip-meridiem">AM</div>
-            </div>
-
-            <!-- Letter grid is built by clock.js from WORD_CLOCK_ROWS. -->
-            <div id="word-clock-wrapper" class="clock-item clock-v6">
-                <div class="word-clock"></div>
-            </div>
-
-            <div id="ring-clock-wrapper" class="clock-item clock-v7">
-                <div class="ring-clock">
-                    <svg viewBox="0 0 232 232">
-                        <g class="ring-track">
-                            <circle cx="116" cy="116" r="106"></circle>
-                            <circle cx="116" cy="116" r="88"></circle>
-                            <circle cx="116" cy="116" r="70"></circle>
-                        </g>
-                        <circle class="ring-arc ring-seconds" cx="116" cy="116" r="106" pathLength="100"></circle>
-                        <circle class="ring-arc ring-minutes" cx="116" cy="116" r="88" pathLength="100"></circle>
-                        <circle class="ring-arc ring-hours" cx="116" cy="116" r="70" pathLength="100"></circle>
-                    </svg>
-                    <div class="ring-face">
-                        <div class="ring-time">09:41</div>
-                        <div class="ring-date">Mon 10 Aug</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Segments are built by clock.js: seven per digit. -->
-            <div id="lcd-clock-wrapper" class="clock-item clock-v8">
-                <div class="lcd-group" data-unit="hours"></div>
-                <div class="lcd-colon"><i></i><i></i></div>
-                <div class="lcd-group" data-unit="minutes"></div>
-                <div class="lcd-group small" data-unit="seconds"></div>
-                <div class="lcd-meridiem">AM</div>
-            </div>
-
-            <!-- Reel strips are built by clock.js. -->
-            <div id="reel-clock-wrapper" class="clock-item clock-v9">
-                <div class="reel-column">
-                    <div class="reel" data-unit="hours"><div class="reel-strip"></div></div>
-                    <span class="reel-label">Hr</span>
-                </div>
-                <div class="reel-column">
-                    <div class="reel" data-unit="minutes"><div class="reel-strip"></div></div>
-                    <span class="reel-label">Min</span>
-                </div>
-                <div class="reel-column">
-                    <div class="reel" data-unit="seconds"><div class="reel-strip"></div></div>
-                    <span class="reel-label">Sec</span>
-                </div>
-            </div>
-
-            <div id="arc-clock-wrapper" class="clock-item clock-v10">
-                <svg viewBox="0 0 340 210">
-                    <path class="arc-day" d="M 40 150 A 130 95 0 0 1 300 150"></path>
-                    <line class="arc-horizon" x1="18" y1="150" x2="322" y2="150"></line>
-                    <line class="arc-night" x1="40" y1="178" x2="300" y2="178"></line>
-                    <text class="arc-time" x="170" y="118">09:41</text>
-                    <text class="arc-date" x="170" y="138">MON 10 AUG</text>
-                    <text class="arc-end" x="40" y="199">06:00</text>
-                    <text class="arc-end arc-end-right" x="300" y="199">18:00</text>
-                    <circle class="arc-marker" cx="40" cy="150" r="7"></circle>
-                </svg>
-            </div>
-
-            <div id="outline-clock-wrapper" class="clock-item clock-v11">
-                <div class="outline-row">
-                    <span class="outline-time">09:41</span>
-                    <span class="outline-side">
-                        <span class="outline-seconds">53</span>
-                        <span class="outline-meridiem">AM</span>
-                    </span>
-                </div>
-                <div class="outline-date">Monday 10 August</div>
-            </div>
+      <!-- Clock -->
+      <div id="clock-position-wrapper" class="horizontal-center">
+        <div id="clock-wrapper" class="glass-card clock-item clock-v1">
+          <div id="clock"></div>
+          <div id="date"></div>
         </div>
 
-        <!-- Shortcuts -->
-        <div id="shortcuts-wrapper" class="horizontal-center">
-            <div class="item glass-card add-more">
-                <img src="assets/icon/edit.svg" alt="Add">
+        <div id="analog-clock-wrapper" class="clock-item clock-v2">
+          <div class="clock">
+            <!-- Numbers -->
+            <div class="mark m1"></div>
+            <div class="mark m2"></div>
+            <div class="mark m4"></div>
+            <div class="mark m5"></div>
+            <div class="mark m7"></div>
+            <div class="mark m8"></div>
+            <div class="mark m10"></div>
+            <div class="mark m11"></div>
+
+            <div class="number n12">12</div>
+            <div class="number n3">3</div>
+            <div class="number n6">6</div>
+            <div class="number n9">9</div>
+
+            <div class="hand hour" id="hour"></div>
+            <div class="hand minute" id="minute"></div>
+            <div class="hand second" id="second"></div>
+            <div class="center-dot"></div>
+          </div>
+        </div>
+
+        <div id="digital-clock-v2-wrapper" class="clock-item clock-v3">
+          <div id="glow-clock">
+            <p class="date">2026-01-02 FRI</p>
+            <p class="time">15:17:53</p>
+          </div>
+        </div>
+
+        <div id="stack-clock-wrapper" class="clock-item clock-v4">
+          <div class="stack-time">
+            <span class="stack-hours">09</span>
+            <span class="stack-minutes">41</span>
+          </div>
+          <div class="stack-progress"><span></span></div>
+          <div class="stack-foot">
+            <span class="stack-meridiem">AM</span>
+            <span class="rule"></span>
+            <span class="stack-date">Mon 10 Aug</span>
+          </div>
+        </div>
+
+        <!-- Digits are built by clock.js: each needs four panels. -->
+        <div id="flip-clock-wrapper" class="clock-item clock-v5">
+          <div class="flip-group" data-unit="hours"></div>
+          <div class="flip-group" data-unit="minutes"></div>
+          <div class="flip-group small" data-unit="seconds"></div>
+          <div class="flip-meridiem">AM</div>
+        </div>
+
+        <!-- Letter grid is built by clock.js from WORD_CLOCK_ROWS. -->
+        <div id="word-clock-wrapper" class="clock-item clock-v6">
+          <div class="word-clock"></div>
+        </div>
+
+        <div id="ring-clock-wrapper" class="clock-item clock-v7">
+          <div class="ring-clock">
+            <svg viewBox="0 0 232 232">
+              <g class="ring-track">
+                <circle cx="116" cy="116" r="106"></circle>
+                <circle cx="116" cy="116" r="88"></circle>
+                <circle cx="116" cy="116" r="70"></circle>
+              </g>
+              <circle
+                class="ring-arc ring-seconds"
+                cx="116"
+                cy="116"
+                r="106"
+                pathLength="100"
+              ></circle>
+              <circle
+                class="ring-arc ring-minutes"
+                cx="116"
+                cy="116"
+                r="88"
+                pathLength="100"
+              ></circle>
+              <circle
+                class="ring-arc ring-hours"
+                cx="116"
+                cy="116"
+                r="70"
+                pathLength="100"
+              ></circle>
+            </svg>
+            <div class="ring-face">
+              <div class="ring-time">09:41</div>
+              <div class="ring-date">Mon 10 Aug</div>
             </div>
-        </div>
-        <div id="search-focus-overlay"></div>
-        <div id="search-wrapper" class="glass-card horizontal-center">
-            <img src="assets/icon/search.svg" alt="search">
-            <input type="text" placeholder="Search ..." name="search" autocomplete="off">
-            <div id="search-history-dropdown"></div>
+          </div>
         </div>
 
-        <!-- Arrange mode: centre guides and the toolbar that dismisses it -->
-        <div id="arrange-guide-x"></div>
-        <div id="arrange-guide-y"></div>
-        <div id="arrange-bar" class="glass-card">
-            <span>Drag a widget to move it. It snaps to the centre lines.</span>
-            <button id="arrange-done" type="button">Done</button>
+        <!-- Segments are built by clock.js: seven per digit. -->
+        <div id="lcd-clock-wrapper" class="clock-item clock-v8">
+          <div class="lcd-group" data-unit="hours"></div>
+          <div class="lcd-colon"><i></i><i></i></div>
+          <div class="lcd-group" data-unit="minutes"></div>
+          <div class="lcd-group small" data-unit="seconds"></div>
+          <div class="lcd-meridiem">AM</div>
         </div>
 
-        <!-- Console -->
-        <div class="settings-container glass-card" id="console-btn">
-            <img src="assets/icon/terminal.svg" alt="console">
-        </div>
-
-        <!-- Settings -->
-        <div class="settings-container glass-card" id="settings-btn">
-            <img src="assets/icon/setting.svg" alt="settings">
-        </div>
-
-
-        <!-- Sidebar Overlay -->
-        <div id="shortcut-sidebar-overlay" class="shortcut-sidebar-overlay hidden">
-            <div id="shortcut-sidebar" class="sidebar glass-card">
-                <h1>Add New</h1>
-                <div class="new-wrapper">
-                    <input id="shortcut-url-input" type="text" placeholder="https://example.com">
-                </div>
-                <h2>Added Shortcuts</h2>
-                <div class="shortcuts-wrapper">
-
-                </div>
+        <!-- Reel strips are built by clock.js. -->
+        <div id="reel-clock-wrapper" class="clock-item clock-v9">
+          <div class="reel-column">
+            <div class="reel" data-unit="hours">
+              <div class="reel-strip"></div>
             </div>
+            <span class="reel-label">Hr</span>
+          </div>
+          <div class="reel-column">
+            <div class="reel" data-unit="minutes">
+              <div class="reel-strip"></div>
+            </div>
+            <span class="reel-label">Min</span>
+          </div>
+          <div class="reel-column">
+            <div class="reel" data-unit="seconds">
+              <div class="reel-strip"></div>
+            </div>
+            <span class="reel-label">Sec</span>
+          </div>
         </div>
 
-        <!-- Settings Sidebar Overlay -->
-        <div id="settings-sidebar-overlay" class="settings-sidebar-overlay hidden">
-            <div id="settings-sidebar" class="sidebar glass-card">
-                <ul class="tabs">
-                    <li class="active" setting-btn="general">General</li>
-                    <li setting-btn="background">Background</li>
-                    <li setting-btn="clock">Clock</li>
-                    <li setting-btn="bookmark">Bookmark</li>
-                    <li setting-btn="shortcut">Shortcuts</li>
-                    <li setting-btn="search">Search</li>
-                    <li setting-btn="google">Google</li>
-                </ul>
-                <div id="background-settings-wrapper" class="item-wrapper" item-name="background">
-                    <div class="available-videos">
-
-                    </div>
-                    <div class="video-selector">
-                        <p>Upload Video</p>
-                        <img src="assets/icon/upload.svg" alt="video-pick">
-                        <input id="videoInput" type="file" accept=".mp4">
-                    </div>
-                    <p>Blur</p>
-                    <div class="range-slider">
-                        <input class="range-slider__range" type="range" value="0" min="0" max="50" id="bg-blur-slider">
-                        <span class="range-slider__value">0</span>
-                    </div>
-                    <p>Shadow</p>
-                    <div class="range-slider">
-                        <input class="range-slider__range" type="range" value="0" min="0" max="100"
-                            id="bg-shadow-slider">
-                        <span class="range-slider__value">0</span>
-                    </div>
-                    <p>Blend Mode</p>
-                    <select id="bg-blend-mode">
-                        <option value="normal">Normal</option>
-                        <option value="multiply">Multiply</option>
-                        <option value="screen">Screen</option>
-                        <option value="overlay">Overlay</option>
-                        <option value="darken">Darken</option>
-                        <option value="lighten">Lighten</option>
-                        <option value="color-dodge">Color Dodge</option>
-                        <option value="color-burn">Color Burn</option>
-                        <option value="hard-light">Hard Light</option>
-                        <option value="soft-light">Soft Light</option>
-                        <option value="difference">Difference</option>
-                        <option value="exclusion">Exclusion</option>
-                        <option value="hue">Hue</option>
-                        <option value="saturation">Saturation</option>
-                        <option value="color">Color</option>
-                        <option value="luminosity">Luminosity</option>
-                    </select>
-                </div>
-
-                <div id="clock-settings-wrapper" class="item-wrapper" item-name="clock">
-                    <div class="item">
-                        <span>Show Clock</span>
-                        <label class="switch">
-                            <input type="checkbox" data-widget-toggle="clock-position-wrapper">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="item">
-                        <p>Style</p>
-                        <div class="clock-style-wrapper">
-                            <img src="/assets/image/clock_option/card_v1.svg" alt="Card" clock-name="clock-v1">
-                            <img src="/assets/image/clock_option/analog_v1.svg" alt="Analog" clock-name="clock-v2">
-                            <img src="/assets/image/clock_option/glow_v1.svg" alt="Glow" clock-name="clock-v3">
-                            <img src="/assets/image/clock_option/stacked_v1.svg" alt="Stacked" clock-name="clock-v4">
-                            <img src="/assets/image/clock_option/flip_v1.svg" alt="Flip" clock-name="clock-v5">
-                            <img src="/assets/image/clock_option/words_v1.svg" alt="Words" clock-name="clock-v6">
-                            <img src="/assets/image/clock_option/rings_v1.svg" alt="Rings" clock-name="clock-v7">
-                            <img src="/assets/image/clock_option/lcd_v1.svg" alt="LCD" clock-name="clock-v8">
-                            <img src="/assets/image/clock_option/reels_v1.svg" alt="Reels" clock-name="clock-v9">
-                            <img src="/assets/image/clock_option/dayarc_v1.svg" alt="Day arc" clock-name="clock-v10">
-                            <img src="/assets/image/clock_option/outline_v1.svg" alt="Outline" clock-name="clock-v11">
-                        </div>
-                    </div>
-                    <div class="item">
-                        <p>Text Color</p>
-                        <input type="color">
-                        <input type="text" class="hex-input" placeholder="#FFFFFF" maxlength="7" spellcheck="false">
-                    </div>
-                    <div class="item position" content-id="clock-position-wrapper" default-vertical="top"></div>
-                </div>
-
-                <div id="bookmark-settings-wrapper" class=" item-wrapper" item-name="bookmark">
-                    <div class="item">
-                        <span>Show Bookmarks</span>
-                        <label class="switch">
-                            <input type="checkbox" data-widget-toggle="bookmark-container">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="item">
-                        <span>Text Color</span>
-                        <input type="color">
-                        <input type="text" class="hex-input" placeholder="#FFFFFF" maxlength="7" spellcheck="false">
-                    </div>
-                    <div class="item position" content-id="bookmark-container" default-horizontal="left" default-vertical="top"></div>
-                </div>
-
-                <div id="shortcut-settings-wrapper" class=" item-wrapper" item-name="shortcut">
-                    <div class="item">
-                        <span>Show Shortcuts</span>
-                        <label class="switch">
-                            <input type="checkbox" data-widget-toggle="shortcuts-wrapper">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="item">
-                        <span>Text Color</span>
-                        <input type="color">
-                        <input type="text" class="hex-input" placeholder="#FFFFFF" maxlength="7" spellcheck="false">
-                    </div>
-                    <div class="item">
-                        <span>Vertical Layout</span>
-                        <label class="switch">
-                            <input type="checkbox" id="shortcut-layout-toggle">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="item">
-                        <p>Spacing</p>
-                        <div class="range-slider">
-                            <input class="range-slider__range" type="range" value="24" min="0" max="60"
-                                id="shortcut-gap-slider">
-                            <span class="range-slider__value">24</span>
-                        </div>
-                    </div>
-                    <div class="item position" content-id="shortcuts-wrapper" default-vertical="top"></div>
-                </div>
-
-                <div id="search-settings-wrapper" class=" item-wrapper" item-name="search">
-                    <div class="item">
-                        <span>Show Search Bar</span>
-                        <label class="switch">
-                            <input type="checkbox" data-widget-toggle="search-wrapper">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="item position" content-id="search-wrapper" default-vertical="top"></div>
-                </div>
-
-                <div id="google-settings-wrapper" class=" item-wrapper" item-name="google">
-                    <div class="item">
-                        <span>Show Google Button</span>
-                        <label class="switch">
-                            <input type="checkbox" data-widget-toggle="google-wrapper">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="item">
-                        <span>Text Color</span>
-                        <input type="color">
-                        <input type="text" class="hex-input" placeholder="#FFFFFF" maxlength="7" spellcheck="false">
-                    </div>
-                    <div class="item google-items">
-                        <p>Items</p>
-                        <!-- Rows are built by google.js from GOOGLE_CATALOGUE. -->
-                        <div class="google-item-list"></div>
-                    </div>
-                    <div class="item position" content-id="google-wrapper" default-horizontal="right"
-                        default-vertical="top"></div>
-                </div>
-
-                <div id="general-settings-wrapper" class="item-wrapper" item-name="general">
-                    <div class="item">
-                        <span>Widget Positions</span>
-                        <button id="arrange-start" class="settings-button" type="button">Arrange on page</button>
-                    </div>
-                    <div class="item">
-                        <span>Settings Backup</span>
-                        <div class="backup-actions">
-                            <button id="export-settings" class="settings-button" type="button">Export</button>
-                            <button id="import-settings" class="settings-button" type="button">Import</button>
-                            <input id="import-settings-file" type="file" accept="application/json,.json" hidden>
-                        </div>
-                        <p class="settings-note">Saves your clock, colours, positions, shortcuts and Google
-                            picks to a file. Your background image or video is not included.</p>
-                        <span id="backup-status" class="settings-status" role="status"></span>
-                    </div>
-                    <div class="item">
-                        <span>Glass Color</span>
-                        <input type="color" id="glass-color-picker">
-                        <input type="text" class="hex-input" id="glass-hex-input" placeholder="#0C0C0C" maxlength="7"
-                            spellcheck="false">
-                    </div>
-                </div>
-            </div>
+        <div id="arc-clock-wrapper" class="clock-item clock-v10">
+          <svg viewBox="0 0 340 210">
+            <path class="arc-day" d="M 40 150 A 130 95 0 0 1 300 150"></path>
+            <line class="arc-horizon" x1="18" y1="150" x2="322" y2="150"></line>
+            <line class="arc-night" x1="40" y1="178" x2="300" y2="178"></line>
+            <text class="arc-time" x="170" y="118">09:41</text>
+            <text class="arc-date" x="170" y="138">MON 10 AUG</text>
+            <text class="arc-end" x="40" y="199">06:00</text>
+            <text class="arc-end arc-end-right" x="300" y="199">18:00</text>
+            <circle class="arc-marker" cx="40" cy="150" r="7"></circle>
+          </svg>
         </div>
 
-        <!-- Bookmarks -->
-        <div id="bookmark-container"></div>
-
-        <!-- Google Items -->
-        <div id="google-wrapper">
-            <div id="icon-container" class="glass-card">
-                <img src="assets/icon/google.png" alt="Google">
-            </div>
-            <div class="item-container glass-card">
-
-            </div>
+        <div id="outline-clock-wrapper" class="clock-item clock-v11">
+          <div class="outline-row">
+            <span class="outline-time">09:41</span>
+            <span class="outline-side">
+              <span class="outline-seconds">53</span>
+              <span class="outline-meridiem">AM</span>
+            </span>
+          </div>
+          <div class="outline-date">Monday 10 August</div>
         </div>
+      </div>
 
+      <!-- Shortcuts -->
+      <div id="shortcuts-wrapper" class="horizontal-center">
+        <div class="item glass-card add-more">
+          <img src="assets/icon/edit.svg" alt="Add" />
+        </div>
+      </div>
+      <div id="search-focus-overlay"></div>
+      <div id="search-wrapper" class="glass-card horizontal-center">
+        <img src="assets/icon/search.svg" alt="search" />
+        <input
+          type="text"
+          placeholder="Search ..."
+          name="search"
+          autocomplete="off"
+        />
+        <div id="search-history-dropdown"></div>
+      </div>
+
+      <!-- Quote -->
+      <div id="quote-wrapper" class="horizontal-center quote-empty">
+        <p id="quote-text"></p>
+      </div>
+
+      <!-- Arrange mode: centre guides and the toolbar that dismisses it -->
+      <div id="arrange-guide-x"></div>
+      <div id="arrange-guide-y"></div>
+      <div id="arrange-bar" class="glass-card">
+        <span>Drag a widget to move it. It snaps to the centre lines.</span>
+        <button id="arrange-done" type="button">Done</button>
+      </div>
+
+      <!-- Console -->
+      <div
+        class="settings-container glass-card"
+        id="console-btn"
+        data-shortcut="CTRL + K"
+      >
+        <img src="assets/icon/terminal.svg" alt="console" />
+      </div>
+
+      <!-- Settings -->
+      <div
+        class="settings-container glass-card"
+        id="settings-btn"
+        data-shortcut="CTRL + S"
+      >
+        <img src="assets/icon/setting.svg" alt="settings" />
+      </div>
+
+      <!-- Sidebar Overlay -->
+      <div
+        id="shortcut-sidebar-overlay"
+        class="shortcut-sidebar-overlay hidden"
+      >
+        <div id="shortcut-sidebar" class="sidebar glass-card">
+          <h1>Add New</h1>
+          <div class="new-wrapper">
+            <input
+              id="shortcut-url-input"
+              type="text"
+              placeholder="https://example.com"
+            />
+          </div>
+          <h2>Added Shortcuts</h2>
+          <div class="shortcuts-wrapper"></div>
+        </div>
+      </div>
+
+      <!-- Settings Sidebar Overlay -->
+      <div
+        id="settings-sidebar-overlay"
+        class="settings-sidebar-overlay hidden"
+      >
+        <div id="settings-sidebar" class="sidebar glass-card">
+          <ul class="tabs">
+            <li class="active" setting-btn="general">General</li>
+            <li setting-btn="background">Background</li>
+            <li setting-btn="clock">Clock</li>
+            <li setting-btn="bookmark">Bookmark</li>
+            <li setting-btn="shortcut">Shortcuts</li>
+            <li setting-btn="search">Search</li>
+            <li setting-btn="google">Google</li>
+            <li setting-btn="quote">Quote</li>
+          </ul>
+          <!-- The panes scroll on their own so the rail beside them stays
+               put. Adding a tab is one <li> above and one .item-wrapper in
+               here, matched on setting-btn / item-name. -->
+          <div class="settings-panes">
+          <div
+            id="background-settings-wrapper"
+            class="item-wrapper"
+            item-name="background"
+          >
+            <div class="available-videos"></div>
+            <div class="video-selector">
+              <p>Upload Video</p>
+              <img src="assets/icon/upload.svg" alt="video-pick" />
+              <input id="videoInput" type="file" accept=".mp4" />
+            </div>
+            <p>Blur</p>
+            <div class="range-slider">
+              <input
+                class="range-slider__range"
+                type="range"
+                value="0"
+                min="0"
+                max="50"
+                id="bg-blur-slider"
+              />
+              <span class="range-slider__value">0</span>
+            </div>
+            <p>Shadow</p>
+            <div class="range-slider">
+              <input
+                class="range-slider__range"
+                type="range"
+                value="0"
+                min="0"
+                max="100"
+                id="bg-shadow-slider"
+              />
+              <span class="range-slider__value">0</span>
+            </div>
+            <p>Blend Mode</p>
+            <select id="bg-blend-mode">
+              <option value="normal">Normal</option>
+              <option value="multiply">Multiply</option>
+              <option value="screen">Screen</option>
+              <option value="overlay">Overlay</option>
+              <option value="darken">Darken</option>
+              <option value="lighten">Lighten</option>
+              <option value="color-dodge">Color Dodge</option>
+              <option value="color-burn">Color Burn</option>
+              <option value="hard-light">Hard Light</option>
+              <option value="soft-light">Soft Light</option>
+              <option value="difference">Difference</option>
+              <option value="exclusion">Exclusion</option>
+              <option value="hue">Hue</option>
+              <option value="saturation">Saturation</option>
+              <option value="color">Color</option>
+              <option value="luminosity">Luminosity</option>
+            </select>
+          </div>
+
+          <div
+            id="clock-settings-wrapper"
+            class="item-wrapper"
+            item-name="clock"
+          >
+            <div class="item">
+              <span>Show Clock</span>
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  data-widget-toggle="clock-position-wrapper"
+                />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="item">
+              <p>Style</p>
+              <div class="clock-style-wrapper">
+                <img
+                  src="/assets/image/clock_option/card_v1.svg"
+                  alt="Card"
+                  clock-name="clock-v1"
+                />
+                <img
+                  src="/assets/image/clock_option/analog_v1.svg"
+                  alt="Analog"
+                  clock-name="clock-v2"
+                />
+                <img
+                  src="/assets/image/clock_option/glow_v1.svg"
+                  alt="Glow"
+                  clock-name="clock-v3"
+                />
+                <img
+                  src="/assets/image/clock_option/stacked_v1.svg"
+                  alt="Stacked"
+                  clock-name="clock-v4"
+                />
+                <img
+                  src="/assets/image/clock_option/flip_v1.svg"
+                  alt="Flip"
+                  clock-name="clock-v5"
+                />
+                <img
+                  src="/assets/image/clock_option/words_v1.svg"
+                  alt="Words"
+                  clock-name="clock-v6"
+                />
+                <img
+                  src="/assets/image/clock_option/rings_v1.svg"
+                  alt="Rings"
+                  clock-name="clock-v7"
+                />
+                <img
+                  src="/assets/image/clock_option/lcd_v1.svg"
+                  alt="LCD"
+                  clock-name="clock-v8"
+                />
+                <img
+                  src="/assets/image/clock_option/reels_v1.svg"
+                  alt="Reels"
+                  clock-name="clock-v9"
+                />
+                <img
+                  src="/assets/image/clock_option/dayarc_v1.svg"
+                  alt="Day arc"
+                  clock-name="clock-v10"
+                />
+                <img
+                  src="/assets/image/clock_option/outline_v1.svg"
+                  alt="Outline"
+                  clock-name="clock-v11"
+                />
+              </div>
+            </div>
+            <div class="item">
+              <p>Text Color</p>
+              <input type="color" />
+              <input
+                type="text"
+                class="hex-input"
+                placeholder="#FFFFFF"
+                maxlength="7"
+                spellcheck="false"
+              />
+            </div>
+            <div
+              class="item position"
+              content-id="clock-position-wrapper"
+              default-vertical="top"
+            ></div>
+          </div>
+
+          <div
+            id="bookmark-settings-wrapper"
+            class="item-wrapper"
+            item-name="bookmark"
+          >
+            <div class="item">
+              <span>Show Bookmarks</span>
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  data-widget-toggle="bookmark-container"
+                />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="item">
+              <span>Text Color</span>
+              <input type="color" />
+              <input
+                type="text"
+                class="hex-input"
+                placeholder="#FFFFFF"
+                maxlength="7"
+                spellcheck="false"
+              />
+            </div>
+            <div
+              class="item position"
+              content-id="bookmark-container"
+              default-horizontal="left"
+              default-vertical="top"
+            ></div>
+          </div>
+
+          <div
+            id="shortcut-settings-wrapper"
+            class="item-wrapper"
+            item-name="shortcut"
+          >
+            <div class="item">
+              <span>Show Shortcuts</span>
+              <label class="switch">
+                <input type="checkbox" data-widget-toggle="shortcuts-wrapper" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="item">
+              <span>Text Color</span>
+              <input type="color" />
+              <input
+                type="text"
+                class="hex-input"
+                placeholder="#FFFFFF"
+                maxlength="7"
+                spellcheck="false"
+              />
+            </div>
+            <div class="item">
+              <span>Vertical Layout</span>
+              <label class="switch">
+                <input type="checkbox" id="shortcut-layout-toggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="item">
+              <p>Spacing</p>
+              <div class="range-slider">
+                <input
+                  class="range-slider__range"
+                  type="range"
+                  value="24"
+                  min="0"
+                  max="60"
+                  id="shortcut-gap-slider"
+                />
+                <span class="range-slider__value">24</span>
+              </div>
+            </div>
+            <div
+              class="item position"
+              content-id="shortcuts-wrapper"
+              default-vertical="top"
+            ></div>
+          </div>
+
+          <div
+            id="search-settings-wrapper"
+            class="item-wrapper"
+            item-name="search"
+          >
+            <div class="item">
+              <span>Show Search Bar</span>
+              <label class="switch">
+                <input type="checkbox" data-widget-toggle="search-wrapper" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div
+              class="item position"
+              content-id="search-wrapper"
+              default-vertical="top"
+            ></div>
+          </div>
+
+          <div
+            id="google-settings-wrapper"
+            class="item-wrapper"
+            item-name="google"
+          >
+            <div class="item">
+              <span>Show Google Button</span>
+              <label class="switch">
+                <input type="checkbox" data-widget-toggle="google-wrapper" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="item">
+              <span>Text Color</span>
+              <input type="color" />
+              <input
+                type="text"
+                class="hex-input"
+                placeholder="#FFFFFF"
+                maxlength="7"
+                spellcheck="false"
+              />
+            </div>
+            <div class="item google-items">
+              <p>Items</p>
+              <!-- Rows are built by google.js from GOOGLE_CATALOGUE. -->
+              <div class="google-item-list"></div>
+            </div>
+            <div
+              class="item position"
+              content-id="google-wrapper"
+              default-horizontal="right"
+              default-vertical="top"
+            ></div>
+          </div>
+
+          <div id="quote-settings-wrapper" class="item-wrapper" item-name="quote">
+            <div class="item">
+              <span>Show Quote</span>
+              <label class="switch">
+                <input type="checkbox" data-widget-toggle="quote-wrapper" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="item">
+              <p>Quote</p>
+              <textarea
+                id="quote-input"
+                rows="3"
+                placeholder="Write something worth reading every day&hellip;"
+                spellcheck="false"
+              ></textarea>
+            </div>
+            <div class="item">
+              <span>Text Color</span>
+              <input type="color" />
+              <input
+                type="text"
+                class="hex-input"
+                placeholder="#FFFFFF"
+                maxlength="7"
+                spellcheck="false"
+              />
+            </div>
+            <div class="item">
+              <p>Font Size</p>
+              <div class="range-slider">
+                <input
+                  class="range-slider__range"
+                  type="range"
+                  value="18"
+                  min="10"
+                  max="64"
+                  id="quote-size-slider"
+                />
+                <span class="range-slider__value">18</span>
+              </div>
+            </div>
+            <div class="item">
+              <p>Font Weight</p>
+              <div class="range-slider">
+                <input
+                  class="range-slider__range"
+                  type="range"
+                  value="400"
+                  min="100"
+                  max="900"
+                  step="100"
+                  id="quote-weight-slider"
+                />
+                <span class="range-slider__value">400</span>
+              </div>
+            </div>
+            <div class="item">
+              <p>Max Width</p>
+              <div class="range-slider">
+                <input
+                  class="range-slider__range"
+                  type="range"
+                  value="684"
+                  min="240"
+                  max="1200"
+                  step="20"
+                  id="quote-max-width-slider"
+                />
+                <span class="range-slider__value">684</span>
+              </div>
+            </div>
+            <div
+              class="item position"
+              content-id="quote-wrapper"
+              default-vertical="top"
+            ></div>
+          </div>
+
+          <div
+            id="general-settings-wrapper"
+            class="item-wrapper"
+            item-name="general"
+          >
+            <div class="item">
+              <p>Widget Positions</p>
+              <button id="arrange-start" class="settings-button" type="button">
+                Arrange on page
+              </button>
+            </div>
+            <div class="item">
+              <p>Settings Backup</p>
+              <div class="backup-actions">
+                <button
+                  id="export-settings"
+                  class="settings-button"
+                  type="button"
+                >
+                  Export
+                </button>
+                <button
+                  id="import-settings"
+                  class="settings-button"
+                  type="button"
+                >
+                  Import
+                </button>
+                <input
+                  id="import-settings-file"
+                  type="file"
+                  accept="application/json,.json"
+                  hidden
+                />
+              </div>
+              <p class="settings-note">
+                Saves your clock, colours, positions, shortcuts and Google picks
+                to a file. Your background image or video is not included.
+              </p>
+              <span
+                id="backup-status"
+                class="settings-status"
+                role="status"
+              ></span>
+            </div>
+            <div class="item">
+              <span>Glass Color</span>
+              <input type="color" id="glass-color-picker" />
+              <input
+                type="text"
+                class="hex-input"
+                id="glass-hex-input"
+                placeholder="#0C0C0C"
+                maxlength="7"
+                spellcheck="false"
+              />
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bookmarks -->
+      <div id="bookmark-container"></div>
+
+      <!-- Google Items -->
+      <div id="google-wrapper">
+        <div id="icon-container" class="glass-card">
+          <img src="assets/icon/google.png" alt="Google" />
+        </div>
+        <div class="item-container glass-card"></div>
+      </div>
     </section>
 
     <!-- Console. Deliberately a sibling of #foreground rather than a child:
@@ -424,18 +726,25 @@
          section to hide each widget would override the transitions they set
          on themselves. -->
     <div id="console-overlay" class="console-overlay hidden">
-        <div id="console-screen">
-            <div class="console-header">
-                <h1>CONSOLE</h1>
-                <span>Ctrl+S to open &middot; Esc to close</span>
-            </div>
-            <div id="console-output"></div>
-            <div class="console-input-row">
-                <span class="prompt">&#10095;</span>
-                <input id="console-input" type="text" autocomplete="off" autocorrect="off"
-                    autocapitalize="off" spellcheck="false" aria-label="Console command">
-            </div>
+      <div id="console-screen">
+        <div class="console-header">
+          <h1>CONSOLE</h1>
+          <span>Ctrl+K to open &middot; Esc to close</span>
         </div>
+        <div id="console-output"></div>
+        <div class="console-input-row">
+          <span class="prompt">&#10095;</span>
+          <input
+            id="console-input"
+            type="text"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-label="Console command"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- First: patches localStorage so every later write mirrors to sync. -->
@@ -448,11 +757,11 @@
     <script src="assets/js/background-video.js"></script>
     <script src="assets/js/background.js"></script>
     <script src="assets/js/google.js"></script>
+    <script src="assets/js/quote.js"></script>
     <!-- After settings.js: reads the position controls it registers. -->
     <script src="assets/js/arrange.js"></script>
     <script src="assets/js/backup.js"></script>
     <!-- After settings.js: uses makeActivatable for the button's semantics. -->
     <script src="assets/js/console.js"></script>
-</body>
-
+  </body>
 </html>

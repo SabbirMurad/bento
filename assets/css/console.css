@@ -7,41 +7,6 @@
   bottom: 78px;
 }
 
-/* The shortcut is the fastest way in, and nothing else on the page announces
-   it. Absolute, so it does not become a flex item of the button and shove
-   the icon off centre, and it opens leftward — the button sits against the
-   right edge, and the page no longer scrolls to reveal anything past it. */
-#console-btn::after {
-  content: "CTRL + S";
-  position: absolute;
-  right: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%) translateX(4px);
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: rgba(12, 12, 12, 0.75);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
-}
-
-#console-btn:hover::after,
-#console-btn:focus-visible::after {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(-50%) translateX(0);
-}
-
 /* The console owns the whole screen while it is open, so the page steps
    aside rather than sitting blurred behind it. One element carries this
    because #foreground is a single box; hiding its children individually
@@ -213,6 +178,24 @@ body.console-open #foreground {
   color: rgba(26, 188, 156, 0.85);
 }
 
+/* Links keep their line's colour and are marked by the underline instead.
+   Teal already means "the console talking about itself" here, so recolouring
+   these would collide with that; the underline says clickable on its own, and
+   fills in on hover rather than appearing from nothing. */
+#console-output .console-line a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+#console-output .console-line a:hover,
+#console-output .console-line a:focus-visible {
+  color: #1abc9c;
+  text-decoration-color: #1abc9c;
+}
+
 .console-input-row {
   display: flex;
   align-items: center;
@@ -256,7 +239,7 @@ body.console-open #foreground {
   #foreground,
   .console-overlay,
   #console-screen,
-  #console-btn::after {
+  #console-output .console-line a {
     transition: none;
   }
 }

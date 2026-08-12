@@ -107,10 +107,18 @@ body.arranging .arrange-target:hover {
   outline-color: #1abc9c;
 }
 
+/* Dragging writes left/top on every pointermove. A widget whose own CSS
+   animates left/top then eases toward the cursor rather than following it,
+   which reads as lag and, on a fast drag, as the box tearing away from the
+   pointer entirely. The quote and the search bar both declare that
+   transition, and they declare it on an id — which is why the plain
+   .arrange-target rule above cannot switch it off and this one needs
+   !important. */
 body.arranging .arrange-target.arrange-dragging {
   cursor: grabbing;
   outline-color: #1abc9c;
   outline-style: solid;
+  transition: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -31,11 +31,31 @@ document.addEventListener('keydown', e => {
 makeActivatable(settingsBtn, 'button', 'Settings');
 settingsBtn.setAttribute('aria-expanded', 'false');
 
-settingsBtn.onclick = () => {
+function openSettings() {
     settingsOverlay.classList.remove('hidden');
     settingsOverlay.classList.add('show');
     settingsBtn.setAttribute('aria-expanded', 'true');
-};
+}
+
+settingsBtn.onclick = openSettings;
+
+// Ctrl+S (Cmd+S on a Mac) opens settings from anywhere on the page. Chrome
+// lets a page take this one, so preventDefault stops the Save Page dialog
+// appearing behind the panel — and there is nothing on a new tab page worth
+// saving anyway.
+document.addEventListener('keydown', e => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+    if (e.key.toLowerCase() !== 's') return;
+
+    e.preventDefault();
+
+    // Both panels are fixed overlays at the same depth, so leaving the console
+    // open would stack two sheets of translucent glass on top of each other.
+    // Guarded because console.js loads after this file.
+    if (typeof closeConsole === 'function') closeConsole();
+
+    openSettings();
+});
 
 // Every path that closes the panel goes through here, so aria-expanded stays
 // truthful and focus returns to the button that opened it instead of being

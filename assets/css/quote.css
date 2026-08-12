@@ -1,0 +1,84 @@
+/* The quote — a line of your own text sitting on the page. */
+
+#quote-wrapper {
+  position: absolute;
+  /* The gap between the clock, which ends at 41%, and the search bar at 52%.
+     It is the widest space the default layout leaves — enough for a quote
+     wrapping to three lines before it reaches the search bar — and it reads
+     in the right order: clock, quote, search. See the note in clock.css for
+     why these measure from the top rather than the bottom. */
+  top: 43%;
+  /* Width is left to auto so the box shrinks to the text: a short quote gets
+     a box the size of the words, which is what you want to grab hold of in
+     arrange mode. Max width is the wrap point, and is the user's to set.
+     min() keeps the second half of the old rule — never wider than the
+     window, where a fixed width would push the page sideways. */
+  max-width: min(var(--quote-max-width, 684px), calc(100% - 48px));
+  padding: 0 12px;
+  box-sizing: border-box;
+  transition:
+    left 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    top 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Nothing typed yet. The widget can still be switched on, but an empty box
+   should not sit there catching drags in arrange mode. Not .widget-hidden —
+   that key belongs to the show/hide toggle, and overwriting it would make
+   typing a quote silently turn the widget back on. */
+#quote-wrapper.quote-empty {
+  display: none;
+}
+
+#quote-text {
+  margin: 0;
+  text-align: center;
+  color: var(--quote-text-color, #ffffff);
+  font-size: var(--quote-font-size, 18px);
+  font-weight: var(--quote-font-weight, 400);
+  line-height: 1.45;
+  /* No card behind it, so it earns its separation from a busy wallpaper the
+     way the bookmarks bar does. */
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+  /* Newlines typed in the settings box are kept; a pasted url wraps instead
+     of running off the side of the screen. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---- The settings control ---- */
+
+/* Settings items shrink to fit their contents, so without this the row is
+   only as wide as a textarea's default cols and the box stops well short of
+   the panel edge. */
+#settings-sidebar .item-wrapper .item:has(#quote-input) {
+  width: 100%;
+}
+
+#quote-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 76px;
+  resize: vertical;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  outline: none;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+#quote-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+#quote-input:focus {
+  border-color: rgba(26, 188, 156, 0.6);
+  background: rgba(255, 255, 255, 0.09);
+}
