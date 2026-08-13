@@ -2,12 +2,35 @@ const DB_NAME = "themeDB";
 const STORE_NAME = "videos";
 const VIDEO_KEY = "backgroundVideo";
 
-const preset_backgrounds = ['Confused Frieren', 'Hornet Waterfall', 'Japanese Phonk'];
+const preset_backgrounds = ['Tokyo Midnight Rain', 'Dark King and the Crown of Thorns'];
+
+// Which one a profile that has never chosen a background ends up on. Named
+// rather than "the first preset", because the store hands them back in key
+// order and dark-king sorts ahead of tokyo.
+const DEFAULT_PRESET = 'Tokyo Midnight Rain';
+
+const presetId = name => `preset-${toDashCase(name)}`;
+
+// Bump when preset_backgrounds changes. The flag this replaces was a boolean —
+// it could only say that presets had been put in at some point, so a profile
+// that had already run kept the ones it got the first time and never saw a
+// change to the list. Anyone who ran the old build is still holding three
+// presets whose files no longer ship.
+const PRESETS_VERSION = 2;
 const videoInput = document.querySelector("#settings-sidebar .video-selector #videoInput")
 
 // Open DB
+//
+// One connection, opened once and shared. Every caller used to open its own,
+// so a first run fired several upgrade requests at the same time and the
+// callbacks came back in a different order than on any later load — which is
+// why the bug below only ever showed itself once per profile.
+let dbPromise;
+
 function openDB() {
-    return new Promise((resolve, reject) => {
+    if (dbPromise) return dbPromise;
+
+    dbPromise = new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, 2);
 
         request.onupgradeneeded = () => {
@@ -25,6 +48,8 @@ function openDB() {
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
     });
+
+    return dbPromise;
 }
 
 async function generateVideoThumbnail(file) {
@@ -69,33 +94,66 @@ async function saveUserVideo(file) {
     });
 }
 
-async function insertPresetVideosOnce() {
+// Awaiting this used to tell you nothing: the function handed back a resolved
+// promise as soon as it had registered a callback, so the presets went in some
+// time after whoever awaited it had already moved on and drawn the gallery.
+function idbRequest(request) {
+    return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+function idbDone(tx) {
+    return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+// Brings the stored presets in line with the list above: puts what ships now,
+// takes out presets that no longer do. Anything the user uploaded is left
+// alone — only entries marked type "preset" are ours to remove.
+async function syncPresetVideos() {
     const db = await openDB();
 
-    const settingsTx = db.transaction("settings", "readonly");
-    const flagReq = settingsTx.objectStore("settings").get("presetsInserted");
+    const version = await idbRequest(
+        db.transaction("settings", "readonly").objectStore("settings").get("presetsVersion")
+    );
+    if (version === PRESETS_VERSION) return;
 
-    flagReq.onsuccess = async () => {
-        if (flagReq.result) return; // ✅ already done
+    const wanted = new Map(preset_backgrounds.map(name => [presetId(name), name]));
 
-        const tx = db.transaction("videos", "readwrite");
-        const store = tx.objectStore("videos");
+    // Read in its own transaction and finish before opening the write one. An
+    // await inside a live transaction is how you get TransactionInactiveError.
+    const existing = await loadAllVideos();
+    const stale = existing
+        .filter(video => video.type === "preset" && !wanted.has(video.id))
+        .map(video => video.id);
 
-        preset_backgrounds.forEach(name => {
-            store.put({
-                id: `preset-${toDashCase(name)}`,
-                type: "preset",
-                name,
-                videoSrc: `assets/video/${toDashCase(name)}.mp4`,
-                thumbnail: `assets/video/${toDashCase(name)}.png`
-            });
+    const tx = db.transaction("videos", "readwrite");
+    const store = tx.objectStore("videos");
+
+    stale.forEach(id => store.delete(id));
+
+    wanted.forEach((name, id) => {
+        store.put({
+            id,
+            type: "preset",
+            name,
+            videoSrc: `assets/video/${toDashCase(name)}.mp4`,
+            thumbnail: `assets/video/${toDashCase(name)}.png`
         });
+    });
 
-        tx.oncomplete = () => {
-            const flagTx = db.transaction("settings", "readwrite");
-            flagTx.objectStore("settings").put(true, "presetsInserted");
-        };
-    };
+    await idbDone(tx);
+
+    const flagTx = db.transaction("settings", "readwrite");
+    flagTx.objectStore("settings").put(PRESETS_VERSION, "presetsVersion");
+    // The boolean this replaced would otherwise sit there forever meaning
+    // nothing to anyone.
+    flagTx.objectStore("settings").delete("presetsInserted");
+    await idbDone(flagTx);
 }
 
 async function loadAllVideos() {
@@ -108,12 +166,28 @@ async function loadAllVideos() {
     });
 }
 
+// Two renders can be in flight at once — selectVideo calls this, and so does
+// startup. The old version emptied the wrapper up here and only appended after
+// two awaits, so both could get past the clear before either filled it, and
+// every background ended up on the page twice. It righted itself on the next
+// load because by then the presets existed and the two calls no longer
+// overlapped.
+//
+// Now nothing is written until the data is in hand, the whole list goes in as
+// one replacement, and a render that has been overtaken drops out instead of
+// appending on top of the newer one.
+let galleryRenderToken = 0;
+
 async function renderVideoGallery() {
     const wrapper = document.querySelector('.available-videos');
-    wrapper.innerHTML = "";
+    const token = ++galleryRenderToken;
 
     const videos = await loadAllVideos();
     const selectedId = await getSelectedVideoId();
+
+    if (token !== galleryRenderToken) return;
+
+    const fragment = document.createDocumentFragment();
 
     videos.forEach(video => {
         const item = document.createElement("div");
@@ -130,16 +204,23 @@ async function renderVideoGallery() {
 
         item.innerHTML = `
             <div class="bg-wrapper">
-              <img class="background" src="${thumbSrc}">
+              <img class="background">
               <div class="overlay"></div>
               <img src="/assets/icon/check-circle.svg" class="check">
             </div>
-            <p>${video.name}</p>
+            <p></p>
         `;
 
+        // Set rather than interpolated: a name is whatever the uploaded file
+        // was called, which is not something to paste into markup.
+        item.querySelector('.background').src = thumbSrc;
+        item.querySelector('p').textContent = video.name;
+
         item.onclick = () => selectVideo(video);
-        wrapper.appendChild(item);
+        fragment.appendChild(item);
     });
+
+    wrapper.replaceChildren(fragment);
 }
 
 async function setSelectedVideo(id) {
@@ -177,22 +258,24 @@ videoInput.addEventListener("change", async e => {
     await selectVideo(video);
 });
 
-insertPresetVideosOnce().then(async () => {
-    await renderVideoGallery();
-});
+// One sequence rather than two that raced: the presets have to be in the store
+// before anything can look for a video to play, and both of those have to be
+// settled before the gallery is worth drawing. selectVideo renders on its way
+// out, so the only path with nothing to select does the drawing itself.
+(async () => {
+    await syncPresetVideos();
 
-getSelectedVideoId().then(async (selectedId) => {
     const videos = await loadAllVideos();
-    if (selectedId) {
-        const video = videos.find(v => v.id === selectedId);
-        if (video) selectVideo(video);
-    }
-    else {
-        // pick first preset, fallback to first item
-        const defaultVideo =
-            videos.find(v => v.type === "preset") || videos[0];
+    const selectedId = await getSelectedVideoId();
 
-        if (!defaultVideo) return;
-        selectVideo(defaultVideo);
-    }
-});
+    const video =
+        videos.find(v => v.id === selectedId)
+        // Nothing chosen yet, or what was chosen was a preset that has since
+        // stopped shipping and been cleared out from under it.
+        || videos.find(v => v.id === presetId(DEFAULT_PRESET))
+        || videos.find(v => v.type === "preset")
+        || videos[0];
+
+    if (video) await selectVideo(video);
+    else await renderVideoGallery();
+})();
