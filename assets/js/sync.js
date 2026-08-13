@@ -8,6 +8,16 @@
 // reads them synchronously while it starts, and chrome.storage.sync is async,
 // so making it the primary store would mean restructuring every read site.
 
+// Settings belonging to features that have since been taken out. Deleting one
+// locally is not enough on its own: the snapshot on another machine still
+// carries it, and the pull below writes back every key it is given — so a
+// removed setting would reappear on the next load, and go on being exported
+// and synced forever. Listed here so all three paths can agree on it.
+const RETIRED_KEYS = new Set([
+    // The music player, removed in 127e813.
+    'musicPlayerData',
+]);
+
 const SETTINGS_SYNC_KEY = 'bento-settings';
 const SETTINGS_STAMP_KEY = 'settings-synced-at';
 const SETTINGS_PUSH_DELAY = 1500;
@@ -75,6 +85,24 @@ localStorage.removeItem = key => {
     schedulePush();
 };
 
+// Runs down here rather than beside the list, because schedulePush touches
+// pushTimer and that is only declared above this point.
+(function forgetRetiredKeys() {
+    let removedAny = false;
+
+    RETIRED_KEYS.forEach(key => {
+        if (localStorage.getItem(key) === null) return;
+        // The unpatched remover, so this does not schedule a push of its own
+        // before the pull has had its chance.
+        nativeRemoveItem(key);
+        removedAny = true;
+    });
+
+    // Worth one push: it takes the key out of the copy in chrome.storage.sync
+    // too, instead of leaving it there to be filtered on every future pull.
+    if (removedAny) schedulePush();
+})();
+
 (async () => {
     if (!syncStore) {
         resolvePull();
@@ -86,7 +114,10 @@ localStorage.removeItem = key => {
         const localStamp = Number(localStorage.getItem(SETTINGS_STAMP_KEY) || 0);
 
         if (stored && stored.values && stored.at > localStamp) {
-            Object.entries(stored.values).forEach(([key, value]) => nativeSetItem(key, value));
+            Object.entries(stored.values).forEach(([key, value]) => {
+                if (RETIRED_KEYS.has(key)) return;
+                nativeSetItem(key, value);
+            });
             nativeSetItem(SETTINGS_STAMP_KEY, String(stored.at));
 
             // The page has already read localStorage and drawn itself by now,

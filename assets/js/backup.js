@@ -65,7 +65,11 @@ async function restoreBackup(backup) {
 
     localStorage.clear();
     Object.entries(backup.settings).forEach(([key, value]) => {
-        if (key !== SETTINGS_STAMP_KEY) localStorage.setItem(key, String(value));
+        // A file exported before a feature was removed still carries its
+        // settings; importing one should not bring them back. See RETIRED_KEYS
+        // in sync.js.
+        if (key === SETTINGS_STAMP_KEY || RETIRED_KEYS.has(key)) return;
+        localStorage.setItem(key, String(value));
     });
 
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync && backup.synced) {
