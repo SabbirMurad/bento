@@ -301,6 +301,49 @@
   display: flex;
 }
 
+/* Selects had no styling at all, so they came out as native controls on a dark
+   glass panel — white box, black text. Shared rather than scoped to the font
+   picker, since the blend mode dropdown has the same problem.
+
+   The dropdown list itself is drawn by the OS and cannot be styled, which is
+   why the options carry their own colours: without them a dark-themed system
+   renders white-on-white. */
+#settings-sidebar select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+#settings-sidebar select:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+#settings-sidebar select option {
+  background: #1c1c1c;
+  color: white;
+}
+
+#settings-sidebar select optgroup {
+  background: #1c1c1c;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: normal;
+}
+
+/* Same reason the quote textarea needs it: a settings row shrinks to its
+   contents, so without this the select stops short of the panel edge. */
+#settings-sidebar .item-wrapper .item:has(select) {
+  width: 100%;
+}
+
 /* Spacing between rows has one owner: the wrapper's gap. It used to be split
    between that gap and a margin-bottom here, so every row carried 30px and
    the two rules had to be corrected against each other row type by row type.

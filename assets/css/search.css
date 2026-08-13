@@ -1,8 +1,7 @@
 #search-wrapper {
   position: absolute;
-  /* Percentage from the top, matching the clock and the shortcuts. See the
-     note in clock.css for why none of these three measure from the bottom. */
-  top: 52%;
+  /* Part of the captured default layout — see the note in clock.css. */
+  bottom: 57px;
   padding: 0px 12px;
   display: flex;
   width: 684px;
@@ -49,10 +48,20 @@
   outline: none;
   background: none;
   color: white;
+  /* Spelled out rather than left to the browser: form controls do not inherit
+     a font family, so the value was drawing in Chrome's default control font
+     while the placeholder below drew in Archivo. The ghost layer has to match
+     the value character for character, which only works if both are pinned to
+     the same family and the input's default 2px inline padding is gone. */
+  font-family: Archivo, Arial, sans-serif;
   font-size: 14px;
   font-weight: 400;
+  padding: 0;
   width: 100%;
   height: 100%;
+  /* Lifts the real text above the ghost copy underneath it. */
+  position: relative;
+  z-index: 1;
 }
 
 #search-wrapper input::placeholder {
@@ -60,6 +69,34 @@
   font-size: 14px;
   font-weight: 300;
   font-family: Archivo, Arial, sans-serif;
+}
+
+/* The dimmed tail of the top suggestion.
+   An <input> cannot colour part of its own value, so this is a second copy of
+   the text lying directly underneath the real one, sized and positioned onto
+   the input by JS. The part you have actually typed is transparent here — the
+   input itself draws that — which leaves only the completion painted, and
+   leaves it starting at exactly the pixel your text ran out. */
+#search-ghost {
+  position: absolute;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  /* pre, so a trailing space in the typed prefix still takes up its width. */
+  white-space: pre;
+  font-family: Archivo, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+#search-ghost .ghost-typed {
+  color: transparent;
+}
+
+#search-ghost .ghost-rest {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 #search-history-dropdown {
@@ -127,6 +164,16 @@
   flex: 1;
   min-width: 0;
   text-align: left;
+}
+
+/* A query, not a place you have been — so it carries the search icon instead
+   of a favicon and has no url column to sit opposite. */
+.suggest-item img {
+  opacity: 0.5;
+}
+
+.suggest-item .history-title {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .history-url {

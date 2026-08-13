@@ -2,18 +2,16 @@
 
 #quote-wrapper {
   position: absolute;
-  /* The gap between the clock, which ends at 41%, and the search bar at 52%.
-     It is the widest space the default layout leaves — enough for a quote
-     wrapping to three lines before it reaches the search bar — and it reads
-     in the right order: clock, quote, search. See the note in clock.css for
-     why these measure from the top rather than the bottom. */
-  top: 43%;
+  /* Part of the captured default layout — see the note in clock.css. This one
+     measures down from the top while the clock measures up from the bottom,
+     so these two are the pair that close on each other in a short window. */
+  top: 369px;
   /* Width is left to auto so the box shrinks to the text: a short quote gets
      a box the size of the words, which is what you want to grab hold of in
      arrange mode. Max width is the wrap point, and is the user's to set.
      min() keeps the second half of the old rule — never wider than the
      window, where a fixed width would push the page sideways. */
-  max-width: min(var(--quote-max-width, 684px), calc(100% - 48px));
+  max-width: min(var(--quote-max-width, 680px), calc(100% - 48px));
   padding: 0 12px;
   box-sizing: border-box;
   transition:
@@ -34,8 +32,12 @@
   margin: 0;
   text-align: center;
   color: var(--quote-text-color, #ffffff);
-  font-size: var(--quote-font-size, 18px);
+  /* inherit rather than a stack of its own, so leaving the picker alone keeps
+     the quote on whatever the page is set in. */
+  font-family: var(--quote-font-family, inherit);
+  font-size: var(--quote-font-size, 32px);
   font-weight: var(--quote-font-weight, 400);
+  letter-spacing: var(--quote-letter-spacing, 0px);
   line-height: 1.45;
   /* No card behind it, so it earns its separation from a busy wallpaper the
      way the bookmarks bar does. */

@@ -11,6 +11,15 @@ function getDomain(url) {
 }
 
 
+// What a fresh profile starts with. Written to storage the first time rather
+// than only drawn, so that removing them sticks: once the key exists it is an
+// empty array, not a missing one, and this never runs again.
+const DEFAULT_SHORTCUTS = [
+    'https://youtube.com',
+    'https://facebook.com',
+    'https://chatgpt.com',
+];
+
 // ---------------------------
 // Load shortcuts (async)
 // ---------------------------
@@ -20,7 +29,10 @@ async function loadShortcuts() {
 
     // GET SHORTCUTS FROM CHROME STORAGE
     let { shortcuts } = await chrome.storage.sync.get("shortcuts");
-    if (!shortcuts) shortcuts = [];
+    if (!shortcuts) {
+        shortcuts = DEFAULT_SHORTCUTS.slice();
+        await chrome.storage.sync.set({ shortcuts });
+    }
 
     shortcutsWrapper.innerHTML = `
         <div class="item glass-card add-more">

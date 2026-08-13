@@ -3,8 +3,8 @@
 //   node tools/make-package.js
 //
 // Ships only what the extension actually loads. The build scripts, the git
-// history and the dormant music / YouTube player stay out: none of it runs,
-// and unreferenced code in the bundle is exactly what a reviewer asks about.
+// history and the notes stay out: none of it runs, and unreferenced code in
+// the bundle is exactly what a reviewer asks about.
 //
 // No dependencies — the zip is written here, same as the PNG encoder in
 // make-brand-assets.js.
@@ -50,9 +50,10 @@ const packaged = new Set(files);
 const textFiles = files.filter(f => /\.(html|css|js|json)$/.test(f));
 
 textFiles.forEach(file => {
-    // Comments are not references. index.html keeps the player's script tags
-    // commented out as the switch for turning it back on. Block comments
-    // only: stripping // would eat the https:// in every url.
+    // Comments are not references — a path named in one is being described,
+    // not loaded, and a file that no longer ships should not fail the build
+    // because something still talks about it. Block comments only: stripping
+    // // would eat the https:// in every url.
     const body = fs.readFileSync(path.join(ROOT, file), 'utf8')
         .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/\/\*[\s\S]*?\*\//g, '');

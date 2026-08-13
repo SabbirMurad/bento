@@ -26,7 +26,7 @@
     />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.coingecko.com;"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.coingecko.com https://suggestqueries.google.com;"
     />
   </head>
 
@@ -192,7 +192,7 @@
       </div>
 
       <!-- Shortcuts -->
-      <div id="shortcuts-wrapper" class="horizontal-center">
+      <div id="shortcuts-wrapper" class="vertical-center vertical">
         <div class="item glass-card add-more">
           <img src="assets/icon/edit.svg" alt="Add" />
         </div>
@@ -206,6 +206,9 @@
           name="search"
           autocomplete="off"
         />
+        <div id="search-ghost" aria-hidden="true"><span
+            class="ghost-typed"
+          ></span><span class="ghost-rest"></span></div>
         <div id="search-history-dropdown"></div>
       </div>
 
@@ -274,6 +277,7 @@
             <li setting-btn="search">Search</li>
             <li setting-btn="google">Google</li>
             <li setting-btn="quote">Quote</li>
+            <li setting-btn="buttons">Buttons</li>
           </ul>
           <!-- The panes scroll on their own so the rail beside them stays
                put. Adding a tab is one <li> above and one .item-wrapper in
@@ -424,7 +428,7 @@
             <div
               class="item position"
               content-id="clock-position-wrapper"
-              default-vertical="top"
+              default-vertical="bottom"
             ></div>
           </div>
 
@@ -509,7 +513,8 @@
             <div
               class="item position"
               content-id="shortcuts-wrapper"
-              default-vertical="top"
+              default-horizontal="left"
+              default-vertical="vertical-center"
             ></div>
           </div>
 
@@ -528,7 +533,7 @@
             <div
               class="item position"
               content-id="search-wrapper"
-              default-vertical="top"
+              default-vertical="bottom"
             ></div>
           </div>
 
@@ -572,7 +577,11 @@
             <div class="item">
               <span>Show Quote</span>
               <label class="switch">
-                <input type="checkbox" data-widget-toggle="quote-wrapper" />
+                <input
+                  type="checkbox"
+                  data-widget-toggle="quote-wrapper"
+                  data-default-hidden
+                />
                 <span class="slider"></span>
               </label>
             </div>
@@ -596,18 +605,96 @@
                 spellcheck="false"
               />
             </div>
+            <!-- Nothing here is fetched. The first group is already loaded —
+                 two from the Google Fonts link, two bundled in assets/font —
+                 and the rest are resolved by the operating system.
+
+                 Every value is a stack, not a single name, so a font the
+                 machine happens not to have falls through to something of the
+                 same shape rather than to whatever the browser defaults to.
+                 Archivo stays first: it is the page font, and it is what a
+                 stored value that no longer exists falls back to. -->
+            <div class="item">
+              <p>Font Family</p>
+              <select id="quote-font-select">
+                <optgroup label="Bundled">
+                  <option value="Archivo, Arial, sans-serif">Archivo</option>
+                  <option value="Orbitron, sans-serif">Orbitron</option>
+                  <option value="BloodVictimZombie, cursive">
+                    Blood Victim Zombie
+                  </option>
+                  <option value="MonsterChiller, cursive">
+                    Monster Chiller
+                  </option>
+                </optgroup>
+                <optgroup label="Sans-serif">
+                  <option value="Arial, Helvetica, sans-serif">Arial</option>
+                  <option value="'Segoe UI', Tahoma, sans-serif">
+                    Segoe UI
+                  </option>
+                  <option value="Calibri, 'Segoe UI', sans-serif">
+                    Calibri
+                  </option>
+                  <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                  <option value="Tahoma, Geneva, sans-serif">Tahoma</option>
+                  <option value="'Trebuchet MS', Helvetica, sans-serif">
+                    Trebuchet MS
+                  </option>
+                  <option value="system-ui, sans-serif">System UI</option>
+                </optgroup>
+                <optgroup label="Serif">
+                  <option value="Georgia, 'Times New Roman', serif">
+                    Georgia
+                  </option>
+                  <option value="'Times New Roman', Times, serif">
+                    Times New Roman
+                  </option>
+                  <option value="Cambria, Georgia, serif">Cambria</option>
+                  <option value="Constantia, Georgia, serif">
+                    Constantia
+                  </option>
+                  <option
+                    value="'Palatino Linotype', 'Book Antiqua', Palatino, serif"
+                  >
+                    Palatino
+                  </option>
+                </optgroup>
+                <optgroup label="Monospace">
+                  <option value="'Courier New', Courier, monospace">
+                    Courier New
+                  </option>
+                  <option value="Consolas, 'Lucida Console', monospace">
+                    Consolas
+                  </option>
+                </optgroup>
+                <optgroup label="Display">
+                  <option value="Impact, Haettenschweiler, sans-serif">
+                    Impact
+                  </option>
+                  <option value="Gabriola, 'Segoe Script', cursive">
+                    Gabriola
+                  </option>
+                  <option value="'Segoe Script', 'Comic Sans MS', cursive">
+                    Segoe Script
+                  </option>
+                  <option value="'Comic Sans MS', cursive">
+                    Comic Sans MS
+                  </option>
+                </optgroup>
+              </select>
+            </div>
             <div class="item">
               <p>Font Size</p>
               <div class="range-slider">
                 <input
                   class="range-slider__range"
                   type="range"
-                  value="18"
+                  value="32"
                   min="10"
                   max="64"
                   id="quote-size-slider"
                 />
-                <span class="range-slider__value">18</span>
+                <span class="range-slider__value">32</span>
               </div>
             </div>
             <div class="item">
@@ -626,24 +713,92 @@
               </div>
             </div>
             <div class="item">
+              <p>Letter Spacing</p>
+              <div class="range-slider">
+                <input
+                  class="range-slider__range"
+                  type="range"
+                  value="0"
+                  min="-2"
+                  max="16"
+                  step="0.5"
+                  id="quote-letter-spacing-slider"
+                />
+                <span class="range-slider__value">0</span>
+              </div>
+            </div>
+            <div class="item">
               <p>Max Width</p>
               <div class="range-slider">
                 <input
                   class="range-slider__range"
                   type="range"
-                  value="684"
+                  value="680"
                   min="240"
                   max="1200"
                   step="20"
                   id="quote-max-width-slider"
                 />
-                <span class="range-slider__value">684</span>
+                <span class="range-slider__value">680</span>
               </div>
             </div>
             <div
               class="item position"
               content-id="quote-wrapper"
               default-vertical="top"
+            ></div>
+          </div>
+
+          <!-- The two corner icons. Each toggle carries its own
+               data-widget-name because this pane holds more than one, and the
+               console's show/hide names them individually. Switching an icon
+               off only takes it off the page — Ctrl+K and Ctrl+S are bound to
+               the document, not to the button, so they keep working. -->
+          <div
+            id="buttons-settings-wrapper"
+            class="item-wrapper"
+            item-name="buttons"
+          >
+            <div class="item">
+              <span>Show Terminal Icon</span>
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  data-widget-toggle="console-btn"
+                  data-widget-name="terminal"
+                />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <p class="settings-note">
+              Ctrl+K still opens the terminal with the icon hidden.
+            </p>
+            <div
+              class="item position"
+              content-id="console-btn"
+              default-horizontal="right"
+              default-vertical="bottom"
+            ></div>
+
+            <div class="item">
+              <span>Show Settings Icon</span>
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  data-widget-toggle="settings-btn"
+                  data-widget-name="settings"
+                />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <p class="settings-note">
+              Ctrl+S still opens settings with the icon hidden.
+            </p>
+            <div
+              class="item position"
+              content-id="settings-btn"
+              default-horizontal="right"
+              default-vertical="bottom"
             ></div>
           </div>
 
@@ -694,12 +849,16 @@
             </div>
             <div class="item">
               <span>Glass Color</span>
-              <input type="color" id="glass-color-picker" />
+              <input
+                type="color"
+                id="glass-color-picker"
+                data-default="#99988b"
+              />
               <input
                 type="text"
                 class="hex-input"
                 id="glass-hex-input"
-                placeholder="#0C0C0C"
+                placeholder="#99988B"
                 maxlength="7"
                 spellcheck="false"
               />

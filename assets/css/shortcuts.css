@@ -4,9 +4,10 @@
   justify-content: center;
   gap: 24px;
   position: absolute;
-  /* Percentage from the top, matching the clock and the search bar. See the
-     note in clock.css for why none of these three measure from the bottom. */
-  top: 65%;
+  /* Down the left edge rather than across the page — part of the captured
+     default layout, see the note in clock.css. The vertical centring comes
+     from the .vertical-center class in the markup, not from here. */
+  left: 24px;
   max-width: 696px;
   flex-wrap: wrap;
 }

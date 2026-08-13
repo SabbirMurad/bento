@@ -207,7 +207,12 @@ function widgetToggles() {
     const byName = new Map();
     document.querySelectorAll('[data-widget-toggle]').forEach(input => {
         const panel = input.closest('[item-name]');
-        const name = panel ? panel.getAttribute('item-name') : input.dataset.widgetToggle;
+        // data-widget-name first, because the panel's name is only a usable
+        // one while a panel holds a single toggle. The Buttons tab holds two,
+        // and without its own name each would answer to "buttons" and the
+        // second would quietly take the first's place in this map.
+        const name = input.dataset.widgetName
+            || (panel ? panel.getAttribute('item-name') : input.dataset.widgetToggle);
         byName.set(name.toLowerCase(), input);
     });
     return byName;
@@ -580,7 +585,7 @@ const CONSOLE_COMMANDS = {
         complete: () => clockStyleOptions().map(option => option.label),
         run(args) {
             const query = args.join(' ').trim();
-            const current = localStorage.getItem('clock-style') || 'clock-v1';
+            const current = localStorage.getItem('clock-style') || DEFAULT_CLOCK_STYLE;
 
             if (!query || query.toLowerCase() === 'list') {
                 const options = clockStyleOptions();

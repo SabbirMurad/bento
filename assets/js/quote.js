@@ -9,6 +9,8 @@ const QUOTE_TEXT_KEY = 'quote-text';
 const QUOTE_SIZE_KEY = 'quote-font-size';
 const QUOTE_WEIGHT_KEY = 'quote-font-weight';
 const QUOTE_MAX_WIDTH_KEY = 'quote-max-width';
+const QUOTE_LETTER_SPACING_KEY = 'quote-letter-spacing';
+const QUOTE_FONT_KEY = 'quote-font-family';
 
 const quoteWrapper = document.getElementById('quote-wrapper');
 const quoteTextEl = document.getElementById('quote-text');
@@ -16,12 +18,20 @@ const quoteInput = document.getElementById('quote-input');
 const quoteSizeSlider = document.getElementById('quote-size-slider');
 const quoteWeightSlider = document.getElementById('quote-weight-slider');
 const quoteMaxWidthSlider = document.getElementById('quote-max-width-slider');
+const quoteLetterSpacingSlider = document.getElementById('quote-letter-spacing-slider');
+const quoteFontSelect = document.getElementById('quote-font-select');
 
 // ---------------------------
 // Text
 // ---------------------------
+// What the box starts with before anyone has typed. Only a starting value:
+// clearing it stores an empty string, which reads back as empty rather than
+// falling through to this again.
+const QUOTE_DEFAULT_TEXT = "Dont't try to calm the storm. The storm will pass, calm yourself.";
+
 function readQuoteText() {
-    return localStorage.getItem(QUOTE_TEXT_KEY) || '';
+    const saved = localStorage.getItem(QUOTE_TEXT_KEY);
+    return saved === null ? QUOTE_DEFAULT_TEXT : saved;
 }
 
 // Drawing only. The two callers below decide when it is worth saving, which
@@ -82,3 +92,25 @@ function quoteRangeControl(slider, key, property, unit) {
 quoteRangeControl(quoteSizeSlider, QUOTE_SIZE_KEY, '--quote-font-size', 'px');
 quoteRangeControl(quoteWeightSlider, QUOTE_WEIGHT_KEY, '--quote-font-weight', '');
 quoteRangeControl(quoteMaxWidthSlider, QUOTE_MAX_WIDTH_KEY, '--quote-max-width', 'px');
+quoteRangeControl(quoteLetterSpacingSlider, QUOTE_LETTER_SPACING_KEY, '--quote-letter-spacing', 'px');
+
+// ---------------------------
+// Font family
+// ---------------------------
+// A select rather than a slider, so it saves on change — there is no dragging
+// to debounce, and every change is one the user meant.
+if (quoteFontSelect) {
+    const saved = localStorage.getItem(QUOTE_FONT_KEY);
+    if (saved !== null) quoteFontSelect.value = saved;
+    // Assigning a value the list no longer offers leaves the select showing
+    // nothing at all, so an option that has since been dropped falls back to
+    // the first one rather than to a blank row.
+    if (!quoteFontSelect.value) quoteFontSelect.selectedIndex = 0;
+
+    document.body.style.setProperty('--quote-font-family', quoteFontSelect.value);
+
+    quoteFontSelect.addEventListener('change', () => {
+        document.body.style.setProperty('--quote-font-family', quoteFontSelect.value);
+        localStorage.setItem(QUOTE_FONT_KEY, quoteFontSelect.value);
+    });
+}

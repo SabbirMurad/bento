@@ -1,10 +1,12 @@
 /* Console — a full-screen terminal for typed commands. */
 
-/* Sits directly above the settings button and borrows its look. The gear is
-   30px tall inside 8px of padding and sits 24px from the bottom, so 78px
-   clears it with an 8px gap. */
+/* Sits directly above the settings button and borrows its look. Both offsets
+   are part of the captured default layout (see the note in clock.css), which
+   is why they are a pixel off the gear's own 12px/24px rather than sharing
+   them — the gap still clears the 30px icon and its 8px of padding. */
 #console-btn {
-  bottom: 78px;
+  right: 13px;
+  bottom: 82px;
 }
 
 /* The console owns the whole screen while it is open, so the page steps

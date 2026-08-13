@@ -507,7 +507,7 @@ const CLOCK_FACES = {
     'clock-v11': (now, parts) => renderOutlineClock(now, parts),
 };
 
-let activeClockFace = localStorage.getItem('clock-style') || 'clock-v1';
+let activeClockFace = localStorage.getItem('clock-style') || DEFAULT_CLOCK_STYLE;
 
 // Called by applyClockStyle in settings.js. Draws straight away, or the face
 // you just picked would show whatever it last held for up to a second.

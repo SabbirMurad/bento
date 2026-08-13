@@ -1,11 +1,15 @@
-/* The default offsets for the clock, search bar and shortcuts are percentages
-   rather than pixels, and all three measure from the top. Anchoring the clock
-   to the top in pixels while the other two measured up from the bottom meant
-   any window that was not the height this was designed on closed the gap
-   between them — at 935px the clock already overlapped the shortcuts. */
+/* These offsets are a captured layout: they are the positions the extension
+   ships with, taken from a real arrangement rather than chosen on a grid.
+   They are therefore in pixels and each measures from whichever edge it was
+   dropped nearest, which is what the position controls save.
+
+   The cost is the one the percentages here used to avoid: a window shorter
+   than the one this was arranged on closes the gaps between the widgets, and
+   a short enough one overlaps them. The clock measures up from the bottom and
+   the quote down from the top, so those two are the pair that meet first. */
 #clock-position-wrapper {
   position: absolute;
-  top: 24%;
+  bottom: 213px;
 }
 
 #clock-wrapper {

@@ -60,7 +60,7 @@ const GOOGLE_CATALOGUE = [
 // What the panel shows before the user has picked anything. This is exactly
 // the set that used to be hard-coded, so the panel does not change under
 // anyone who upgrades — the rest of the catalogue is opt-in from Settings.
-const GOOGLE_DEFAULT_ENABLED = ['sheets', 'docs', 'forms', 'drive', 'play-console', 'firebase', 'gmail'];
+const GOOGLE_DEFAULT_ENABLED = ['sheets', 'docs', 'forms', 'drive', 'play-console', 'firebase', 'gmail', 'analytics'];
 
 const GOOGLE_ITEMS_KEY = 'google-items';
 

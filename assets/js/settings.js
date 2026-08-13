@@ -107,7 +107,12 @@ for (let colorPicker of textColorPickers) {
         document.querySelector('body').style.setProperty('--' + itemName + '-text-color', savedTextColor);
     }
 
-    const initialColor = savedTextColor || '#ffffff';
+    // White unless the shipped layout wants otherwise, which the markup says
+    // on the picker itself rather than through a table of ids over here.
+    const initialColor = savedTextColor || colorPicker.dataset.default || '#ffffff';
+    if (!savedTextColor && colorPicker.dataset.default) {
+        document.querySelector('body').style.setProperty('--' + itemName + '-text-color', initialColor);
+    }
     colorPicker.value = initialColor;
     if (hexInput) hexInput.value = initialColor;
 
@@ -190,17 +195,15 @@ document.querySelectorAll('#settings-sidebar .item.position').forEach(panel => {
         </div>`).join('');
 });
 
-const settingsItem = document.querySelectorAll('#settings-sidebar .item-wrapper');
-
 // contentId -> { element, place() }. arrange.js drags a widget around the page
 // and calls place() so these controls and localStorage end up agreeing with
 // wherever it was dropped.
 const widgetPositionControls = new Map();
 
-settingsItem.forEach((settingsItem) => {
-    const positionControlWrapper = settingsItem.querySelector('.item.position');
-    if (!positionControlWrapper) return;
-
+// Walks the position panels themselves rather than one per settings tab. A
+// tab that drives two widgets — the Buttons tab does — needs two of these, and
+// looking for one inside each tab could only ever find the first.
+document.querySelectorAll('#settings-sidebar .item.position').forEach(positionControlWrapper => {
     const positionIcons = positionControlWrapper.querySelectorAll('.icon');
     const leftTextInput = positionControlWrapper.querySelector('input[side-type="left"]');
     const rightTextInput = positionControlWrapper.querySelector('input[side-type="right"]');
@@ -398,7 +401,7 @@ settingsItem.forEach((settingsItem) => {
 const clockStyleWrapper = document.querySelector('#clock-settings-wrapper .clock-style-wrapper');
 const clockStyles = clockStyleWrapper.querySelectorAll('img');
 
-const DEFAULT_CLOCK_STYLE = 'clock-v1';
+const DEFAULT_CLOCK_STYLE = 'clock-v4';
 
 clockStyleWrapper.setAttribute('role', 'group');
 clockStyleWrapper.setAttribute('aria-label', 'Clock style');
@@ -486,7 +489,7 @@ settingTabIcons.forEach(icon => {
         document.body.style.setProperty('--glass-bg-color', hexToRgba(hex, 0.18));
     }
 
-    const savedGlassColor = localStorage.getItem('glass-color') || '#0c0c0c';
+    const savedGlassColor = localStorage.getItem('glass-color') || '#99988b';
     glassColorPicker.value = savedGlassColor;
     glassHexInput.value = savedGlassColor;
     applyGlassColor(savedGlassColor);
@@ -542,7 +545,7 @@ function widgetVisibilityKey(targetId) {
     return WIDGET_VISIBILITY_PREFIX + targetId;
 }
 
-function readWidgetVisibility(targetId) {
+function readWidgetVisibility(targetId, defaultVisible = true) {
     const key = widgetVisibilityKey(targetId);
     const legacyKey = LEGACY_VISIBILITY_KEYS[targetId];
 
@@ -554,8 +557,11 @@ function readWidgetVisibility(targetId) {
         localStorage.removeItem(legacyKey);
     }
 
-    // Widgets show unless the user has turned them off.
-    return localStorage.getItem(key) !== 'false';
+    const saved = localStorage.getItem(key);
+    // Nothing stored means nobody has touched this toggle, so the shipped
+    // default stands — on for everything except the quote, which starts off.
+    if (saved === null) return defaultVisible;
+    return saved !== 'false';
 }
 
 document.querySelectorAll('[data-widget-toggle]').forEach(input => {
@@ -568,7 +574,8 @@ document.querySelectorAll('[data-widget-toggle]').forEach(input => {
         input.checked = visible;
     }
 
-    apply(readWidgetVisibility(targetId));
+    // data-default-hidden on the checkbox is how a widget says it ships off.
+    apply(readWidgetVisibility(targetId, !('defaultHidden' in input.dataset)));
 
     input.addEventListener('change', () => {
         localStorage.setItem(widgetVisibilityKey(targetId), input.checked);
@@ -585,10 +592,12 @@ const searchInput = searchWrapper.querySelector('input');
 const shortcutsLayoutWrapper = document.getElementById('shortcuts-wrapper');
 const shortcutLayoutToggle = document.getElementById('shortcut-layout-toggle');
 
-if (localStorage.getItem('shortcuts-layout') === 'vertical') {
-    shortcutsLayoutWrapper.classList.add('vertical');
-    shortcutLayoutToggle.checked = true;
-}
+// Vertical is the shipped default, so the test is for the setting having been
+// turned off rather than for it having been turned on. The wrapper already
+// carries .vertical from the markup; this only has to take it away again.
+const verticalShortcuts = (localStorage.getItem('shortcuts-layout') || 'vertical') === 'vertical';
+shortcutsLayoutWrapper.classList.toggle('vertical', verticalShortcuts);
+shortcutLayoutToggle.checked = verticalShortcuts;
 
 shortcutLayoutToggle.addEventListener('change', () => {
     const vertical = shortcutLayoutToggle.checked;
@@ -618,11 +627,37 @@ shortcutGapSlider.addEventListener('input', () => {
 });
 
 // ---------------------------
-// Search history dropdown
+// Search dropdown: history + query suggestions
 // ---------------------------
+// Two sources feed one list. History is local and answers instantly, so it is
+// redrawn on every keystroke. Suggestions cost a network round trip, so they
+// wait for a pause in the typing — see queueSuggestions.
+//
+// This endpoint is Google's regardless of which engine Enter actually searches,
+// because there is no API that reports the browser's default provider. The
+// suggestions are Google's opinion; the search itself still goes wherever the
+// user has pointed Chrome.
+const SUGGEST_ENDPOINT = 'https://suggestqueries.google.com/complete/search?client=firefox&q=';
+const SUGGEST_DEBOUNCE_MS = 150;
+// Ten rows is already a tall panel, so once both sources are in play the
+// budget is split evenly rather than letting either crowd the other out. An
+// empty box has nothing to suggest against, though, and there history is the
+// only thing there is to show — so it gets the whole ten to itself.
+const HISTORY_LIMIT = 5;
+const HISTORY_LIMIT_EMPTY = 10;
+const SUGGEST_LIMIT = 5;
+
 const historyDropdown = document.getElementById('search-history-dropdown');
+const searchGhost = document.getElementById('search-ghost');
+const searchGhostTyped = searchGhost.querySelector('.ghost-typed');
+const searchGhostRest = searchGhost.querySelector('.ghost-rest');
+
 let highlightIndex = -1;
-let historyItems = [];
+// What the list is currently showing, in display order: { kind: 'history',
+// item } for a visit, { kind: 'suggest', text } for a query.
+let dropdownItems = [];
+let historyResults = [];
+let suggestResults = [];
 
 function openHistoryDropdown() {
     // Freeze at the current (pre-change) height first, then force a reflow
@@ -647,40 +682,164 @@ function closeHistoryDropdown() {
     historyDropdown.style.height = '0px';
 }
 
-async function showHistory(query) {
-    if (!chrome?.history) return;
+// Routes through the user's chosen default search provider instead of
+// hardcoding one, per the Chrome Web Store single-purpose policy.
+function runSearch(text) {
+    chrome.search.query({ text, disposition: 'CURRENT_TAB' });
+}
 
-    const results = await chrome.history.search({
-        text: query || '',
-        maxResults: 10,
-        startTime: 0
-    });
+// ---- Suggestions ----
+let suggestTimer;
+let suggestAbort;
 
-    historyItems = results;
+async function fetchSuggestions(query) {
+    // The request in flight is abandoned rather than awaited: its answer is for
+    // a prefix the user has already typed past.
+    suggestAbort?.abort();
+    suggestAbort = new AbortController();
+
+    try {
+        const res = await fetch(SUGGEST_ENDPOINT + encodeURIComponent(query), {
+            signal: suggestAbort.signal
+        });
+        if (!res.ok) return [];
+        // The endpoint answers ["what you typed", ["first", "second", ...]].
+        const [, suggestions] = await res.json();
+        return Array.isArray(suggestions) ? suggestions.slice(0, SUGGEST_LIMIT) : [];
+    } catch {
+        // Aborted by the next keystroke, or offline. Either way the list keeps
+        // what it already has rather than flashing an error at someone who is
+        // still in the middle of typing.
+        return [];
+    }
+}
+
+// The timer restarts on every character, so a run of typing spends nothing and
+// only the pause at the end of it costs a request.
+function queueSuggestions(query, allowInline) {
+    clearTimeout(suggestTimer);
+    suggestTimer = setTimeout(async () => {
+        const results = query.trim() ? await fetchSuggestions(query) : [];
+        // Only worth drawing if it still describes what is in the box — an
+        // abort can lose the race against a fast typist.
+        if (query !== searchInput.value) return;
+
+        suggestResults = results;
+        renderDropdown();
+        if (allowInline) drawInlineCompletion(results[0]);
+    }, SUGGEST_DEBOUNCE_MS);
+}
+
+// ---- Inline completion ----
+// The full text of the suggestion currently previewed in the box, or '' when
+// there is nothing to accept. Tab reads this.
+let inlineCompletion = '';
+
+function clearInlineCompletion() {
+    inlineCompletion = '';
+    searchGhostTyped.textContent = '';
+    searchGhostRest.textContent = '';
+}
+
+// The ghost is positioned against the wrapper rather than the input, so it has
+// to be told where the input sits — which moves when the bar animates on focus.
+function syncGhostBox() {
+    searchGhost.style.left = searchInput.offsetLeft + 'px';
+    searchGhost.style.top = searchInput.offsetTop + 'px';
+    searchGhost.style.width = searchInput.offsetWidth + 'px';
+    searchGhost.style.height = searchInput.offsetHeight + 'px';
+}
+
+function drawInlineCompletion(suggestion) {
+    clearInlineCompletion();
+
+    const typed = searchInput.value;
+    if (!typed || !suggestion) return;
+    // Matched case-insensitively so "YOUT" still completes, but the prefix is
+    // drawn from `typed` verbatim so its width matches the real input to the
+    // pixel whatever casing the suggestion came back in.
+    if (!suggestion.toLowerCase().startsWith(typed.toLowerCase())) return;
+    if (suggestion.length <= typed.length) return;
+    // Only with the caret at the very end and nothing selected; anywhere else
+    // the tail would appear in the middle of the word being edited.
+    if (searchInput.selectionStart !== typed.length) return;
+    if (searchInput.selectionEnd !== typed.length) return;
+    // Once the value is long enough to scroll the input, the two copies stop
+    // lining up: the input has scrolled its text and the ghost has not.
+    if (searchInput.scrollWidth > searchInput.clientWidth) return;
+
+    inlineCompletion = suggestion;
+    searchGhostTyped.textContent = typed;
+    searchGhostRest.textContent = suggestion.slice(typed.length);
+    syncGhostBox();
+}
+
+// ---- The list ----
+function renderDropdown() {
+    dropdownItems = [
+        ...historyResults.map(item => ({ kind: 'history', item })),
+        ...suggestResults.map(text => ({ kind: 'suggest', text }))
+    ];
     highlightIndex = -1;
     historyDropdown.innerHTML = '';
 
-    if (results.length === 0) {
+    if (dropdownItems.length === 0) {
         closeHistoryDropdown();
         return;
     }
 
-    results.forEach(item => {
+    dropdownItems.forEach(entry => {
         const el = document.createElement('div');
         el.className = 'history-item';
-        el.innerHTML = `
-            <img src="${getFavicon(item.url)}" alt="">
-            <span class="history-title">${item.title || item.url}</span>
-            <span class="history-url">${item.url}</span>
-        `;
-        el.addEventListener('mousedown', e => {
-            e.preventDefault(); // prevent blur from closing dropdown before click fires
-            window.location.href = item.url;
-        });
+
+        if (entry.kind === 'history') {
+            const { url, title } = entry.item;
+            // Only the skeleton is markup. A page title is text some other site
+            // chose, so it goes in through textContent rather than being pasted
+            // into an innerHTML string.
+            el.innerHTML =
+                '<img alt=""><span class="history-title"></span><span class="history-url"></span>';
+            el.querySelector('img').src = getFavicon(url);
+            el.querySelector('.history-title').textContent = title || url;
+            el.querySelector('.history-url').textContent = url;
+            el.addEventListener('mousedown', e => {
+                e.preventDefault(); // prevent blur from closing dropdown before click fires
+                window.location.href = url;
+            });
+        } else {
+            el.classList.add('suggest-item');
+            el.innerHTML =
+                '<img src="assets/icon/search.svg" alt=""><span class="history-title"></span>';
+            el.querySelector('.history-title').textContent = entry.text;
+            el.addEventListener('mousedown', e => {
+                e.preventDefault();
+                runSearch(entry.text);
+            });
+        }
+
         historyDropdown.appendChild(el);
     });
 
     openHistoryDropdown();
+}
+
+async function updateDropdown(query) {
+    const typing = Boolean(query.trim());
+
+    // Anything still in hand describes a prefix that has since been deleted,
+    // and an empty box cannot suggest against nothing. Cleared here rather than
+    // waiting for the debounce, so emptying the box does not leave the last
+    // query's suggestions sitting under the history for another 150ms.
+    if (!typing) suggestResults = [];
+
+    if (chrome?.history) {
+        historyResults = await chrome.history.search({
+            text: query || '',
+            maxResults: typing ? HISTORY_LIMIT : HISTORY_LIMIT_EMPTY,
+            startTime: 0
+        });
+    }
+    renderDropdown();
 }
 
 function setHighlight(index) {
@@ -806,33 +965,58 @@ searchFocusOverlay.addEventListener('click', () => {
 });
 
 searchInput.addEventListener('focus', () => {
-    showHistory(searchInput.value);
+    updateDropdown(searchInput.value);
     focusSearchBar();
 });
-searchInput.addEventListener('input', () => showHistory(searchInput.value));
+
+searchInput.addEventListener('input', e => {
+    // Dropped straight away rather than left standing while the request runs:
+    // it describes the previous prefix and is already wrong.
+    clearInlineCompletion();
+    updateDropdown(searchInput.value);
+    // No tail while deleting. It would grow back the character just removed and
+    // make backspace look like it had not worked.
+    queueSuggestions(searchInput.value, !e.inputType?.startsWith('delete'));
+});
 
 searchInput.addEventListener('blur', () => {
+    clearInlineCompletion();
     setTimeout(() => closeHistoryDropdown(), 150);
     unfocusSearchBar();
 });
 
 searchInput.addEventListener('keydown', e => {
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'Tab') {
+        // The key is only claimed when there is something to accept, so Tab
+        // still moves focus out of an empty or already-complete box.
+        if (!inlineCompletion) return;
         e.preventDefault();
-        setHighlight(Math.min(highlightIndex + 1, historyItems.length - 1));
+        searchInput.value = inlineCompletion;
+        clearInlineCompletion();
+        updateDropdown(searchInput.value);
+        // Asked again from the completed text, so a longer suggestion can offer
+        // itself and Tab can be pressed a second time.
+        queueSuggestions(searchInput.value, true);
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlight(Math.min(highlightIndex + 1, dropdownItems.length - 1));
     } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setHighlight(Math.max(highlightIndex - 1, -1));
     } else if (e.key === 'Escape') {
+        clearInlineCompletion();
         closeHistoryDropdown();
         searchInput.blur();
     } else if (e.key === 'Enter') {
-        if (highlightIndex >= 0 && historyItems[highlightIndex]) {
-            window.location.href = historyItems[highlightIndex].url;
+        const entry = dropdownItems[highlightIndex];
+        if (entry?.kind === 'history') {
+            window.location.href = entry.item.url;
+        } else if (entry?.kind === 'suggest') {
+            runSearch(entry.text);
         } else if (searchInput.value.trim()) {
-            // Routes through the user's chosen default search provider instead
-            // of hardcoding one, per the Chrome Web Store single-purpose policy.
-            chrome.search.query({ text: searchInput.value.trim(), disposition: 'CURRENT_TAB' });
+            // Deliberately what was typed, not the dimmed tail. Until Tab takes
+            // it the tail is a preview, the way a shell autosuggestion is.
+            runSearch(searchInput.value.trim());
         }
     }
 });

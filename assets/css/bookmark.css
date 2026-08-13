@@ -83,6 +83,25 @@
   transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
 }
 
+/* A folder with hundreds of links would otherwise run off the bottom of the
+   screen with no way to reach the end of it. The scroll comes with the cap
+   rather than after it: max-height alone would only clip what overflows, and
+   leave no way to reach it.
+
+   Held back from any menu that contains a sub-folder, because a sub-folder's
+   flyout opens at left: calc(100% + 8px) — outside this box. Setting overflow
+   on one axis forces the other to compute to auto rather than stay visible, so
+   a scrolling parent clips its own flyouts, and it does that whether or not
+   the scrollbar ever appears. Capping only the menus that have no flyout to
+   lose keeps that from happening. */
+#bookmark-container
+  .container
+  .bookmark-folder
+  .bookmark-children:not(:has(.bookmark-folder)) {
+  max-height: 900px;
+  overflow-y: auto;
+}
+
 #bookmark-container
   .container
   .bookmark-folder
