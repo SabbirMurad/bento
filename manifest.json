@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bento - New Tab",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "A new tab page you arrange yourself. Move, restyle or switch off the clock, bookmarks, shortcuts, search and Google links.",
   "permissions": [
     "bookmarks",
