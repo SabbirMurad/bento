@@ -11,12 +11,15 @@ const DEFAULT_PRESET = 'Tokyo Midnight Rain';
 
 const presetId = name => `preset-${toDashCase(name)}`;
 
-// Bump when preset_backgrounds changes. The flag this replaces was a boolean —
-// it could only say that presets had been put in at some point, so a profile
-// that had already run kept the ones it got the first time and never saw a
-// change to the list. Anyone who ran the old build is still holding three
-// presets whose files no longer ship.
-const PRESETS_VERSION = 2;
+// Bump when preset_backgrounds changes, or when anything about a stored preset
+// record does — the paths below are written into IndexedDB once and read back
+// forever after, so a thumbnail that changes extension without a bump is a 404
+// on every install that already ran. The flag this replaces was a boolean — it
+// could only say that presets had been put in at some point, so a profile that
+// had already run kept the ones it got the first time and never saw a change to
+// the list. Anyone who ran the old build is still holding three presets whose
+// files no longer ship.
+const PRESETS_VERSION = 3;
 const videoInput = document.querySelector("#settings-sidebar .video-selector #videoInput")
 
 // Open DB
@@ -142,7 +145,7 @@ async function syncPresetVideos() {
             type: "preset",
             name,
             videoSrc: `assets/video/${toDashCase(name)}.mp4`,
-            thumbnail: `assets/video/${toDashCase(name)}.png`
+            thumbnail: `assets/video/${toDashCase(name)}.webp`
         });
     });
 
