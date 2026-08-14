@@ -4,11 +4,41 @@ let draggedBookmark = null; // { el, sourceFolderId, sourceContainer }
 // Matches the opacity/transform transition on .bookmark-children.
 const BOOKMARK_CHILDREN_CLOSE_DELAY = 200;
 
+// How close a menu is allowed to get to the edge of the screen.
+const MENU_VIEWPORT_MARGIN = 12;
+
+// Below this a capped menu is more frustrating than one that overhangs, so it
+// is left to overhang instead.
+const MENU_MIN_HEIGHT = 120;
+
 function resetChildrenPosition(childrenContainer) {
     childrenContainer.style.top = '';
     childrenContainer.style.bottom = '';
     childrenContainer.style.left = '';
     childrenContainer.style.right = '';
+    childrenContainer.style.maxHeight = '';
+}
+
+// The cap in bookmark.css is written for a menu hanging off the top bar. This
+// is the real figure, measured from where the menu actually ended up — which
+// depends on whether it had to be flipped to open upwards.
+//
+// Only menus that scroll may be capped. The stylesheet holds overflow back
+// from any menu containing a sub-folder, so that its flyout is not clipped;
+// capping one of those would hide the overflow with no way to reach it, which
+// is worse than letting it overhang.
+function clampMenuHeight(childrenContainer, opensUpward) {
+    if (childrenContainer.querySelector('.bookmark-folder')) return;
+
+    childrenContainer.style.maxHeight = '';
+    const rect = childrenContainer.getBoundingClientRect();
+
+    const available = opensUpward
+        ? rect.bottom - MENU_VIEWPORT_MARGIN
+        : window.innerHeight - rect.top - MENU_VIEWPORT_MARGIN;
+
+    if (rect.height <= available) return;
+    childrenContainer.style.maxHeight = `${Math.max(available, MENU_MIN_HEIGHT)}px`;
 }
 
 // classList.remove('show') starts the fade; the position offsets that flip a
@@ -30,8 +60,10 @@ function positionAndShowChildren(childrenContainer, isTopLevel) {
     childrenContainer.classList.add('show');
 
     const rect = childrenContainer.getBoundingClientRect();
+    let opensUpward = false;
 
     if (rect.bottom > window.innerHeight - 4) {
+        opensUpward = true;
         childrenContainer.style.top = 'unset';
         childrenContainer.style.bottom = isTopLevel ? '100%' : '0';
     }
@@ -41,6 +73,7 @@ function positionAndShowChildren(childrenContainer, isTopLevel) {
         childrenContainer.style.right = isTopLevel ? '0' : 'calc(100% + 8px)';
     }
 
+    clampMenuHeight(childrenContainer, opensUpward);
     childrenContainer.style.visibility = '';
 }
 

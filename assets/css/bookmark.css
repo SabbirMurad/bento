@@ -98,24 +98,32 @@
   pointer-events: none;
   transform: translateY(-6px);
   transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  /* max-height has to cover the 8px of padding above and below and the 1px
+     border from .glass-card, or the cap worked out in JS lands short and the
+     menu still hangs off the bottom of the screen. */
+  box-sizing: border-box;
 }
 
-/* A folder with hundreds of links would otherwise run off the bottom of the
-   screen with no way to reach the end of it. The scroll comes with the cap
-   rather than after it: max-height alone would only clip what overflows, and
-   leave no way to reach it.
+/* A folder with more links than fit on screen has to scroll. Without this it
+   runs off the bottom, and because body is overflow: hidden the page cannot be
+   scrolled to reach it — those links are simply gone. The scroll comes with the
+   cap rather than after it: max-height alone would clip the overflow and leave
+   no way to get at it. positionAndShowChildren works out the real figure from
+   the space below (or above) the folder; this is the fallback before it runs.
 
-   Held back from any menu that contains a sub-folder, because a sub-folder's
-   flyout opens at left: calc(100% + 8px) — outside this box. Setting overflow
-   on one axis forces the other to compute to auto rather than stay visible, so
-   a scrolling parent clips its own flyouts, and it does that whether or not
-   the scrollbar ever appears. Capping only the menus that have no flyout to
-   lose keeps that from happening. */
+   Still held back from any menu containing a sub-folder. Setting overflow on
+   one axis forces the other to compute to auto rather than stay visible, so a
+   scrolling menu clips its own flyouts — measured at 11px of visible width on
+   a 262px flyout. position: fixed does not rescue it either: .glass-card
+   carries backdrop-filter, and that makes every menu the containing block for
+   its own positioned descendants, so a fixed flyout stays anchored inside the
+   box it was trying to escape. Fixing the two cases at once needs the scroll
+   moved onto an inner wrapper that is not the flyout's containing block. */
 #bookmark-container
   .container
   .bookmark-folder
   .bookmark-children:not(:has(.bookmark-folder)) {
-  max-height: 900px;
+  max-height: calc(100vh - 72px);
   overflow-y: auto;
 }
 
@@ -127,6 +135,32 @@
   .bookmark-children {
   top: 0;
   left: calc(100% + 8px);
+}
+
+/* Thinner than the 6px in style.css: these menus are narrow and the bar sits
+   hard against the link text.
+
+   The two auto values are what make the width below do anything. style.css
+   sets scrollbar-width and scrollbar-color on * for Firefox, and since Chrome
+   121 those standard properties are honoured natively — and an element that
+   has them set ignores ::-webkit-scrollbar completely. So the whole webkit
+   block in style.css is already dead in current Chrome, and its `thin` renders
+   at 12px here. Standing the standard properties down for this one element
+   hands control back to the pseudo-element, which is the only way to ask for
+   an exact pixel width. Colours come from the global thumb and track rules.
+
+   Firefox takes no pixel value at all; auto there means a normal-width bar,
+   which is the tradeoff for the menus being right. */
+#bookmark-container .container .bookmark-folder .bookmark-children {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+
+#bookmark-container
+  .container
+  .bookmark-folder
+  .bookmark-children::-webkit-scrollbar {
+  width: 4px;
 }
 
 #bookmark-container
