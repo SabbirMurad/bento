@@ -261,6 +261,41 @@ videoInput.addEventListener("change", async e => {
     await selectVideo(video);
 });
 
+// Chrome throttles a hidden tab's timers and its rendering, but it does not
+// stop the decoder — a looping 1080p background goes on costing CPU on every
+// new tab the user has left open behind the one they are actually reading.
+// Nothing is lost by stopping it: the video is muted, so the autoplay policy
+// lets us start it again later without a user gesture.
+const backgroundVideo = document.getElementById("bg-video");
+
+function syncPlaybackToVisibility() {
+    // Startup gets here before a background has been chosen, and there is
+    // nothing to play until it has.
+    if (!backgroundVideo.src) return;
+
+    if (document.hidden) {
+        backgroundVideo.pause();
+        return;
+    }
+
+    // Rejects when a pause interrupts a start that is still in flight, which
+    // switching tabs quickly does routinely. Not worth reporting, but left
+    // uncaught it prints to the console every time it happens.
+    backgroundVideo.play().catch(() => { });
+}
+
+document.addEventListener("visibilitychange", syncPlaybackToVisibility);
+
+// A new tab page can be loaded without ever being looked at — middle-clicked
+// into the background, or opened by a window that starts minimised — and the
+// autoplay attribute does not care that nobody is watching. Catching it at the
+// play event covers that whenever playback actually begins, which pausing
+// straight after setting .src would not: the media load algorithm runs in a
+// later task, and it is what starts the video in the first place.
+backgroundVideo.addEventListener("play", () => {
+    if (document.hidden) backgroundVideo.pause();
+});
+
 // One sequence rather than two that raced: the presets have to be in the store
 // before anything can look for a video to play, and both of those have to be
 // settled before the gallery is worth drawing. selectVideo renders on its way
