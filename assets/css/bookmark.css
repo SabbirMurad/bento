@@ -41,6 +41,23 @@
   color: var(--bookmark-text-color);
 }
 
+/* Top level only. One long title would otherwise push the whole row along and
+   wrap the bar onto a second line, and it sits across the top of the screen
+   where there is no room to give.
+
+   Held to direct children of .container. A dropdown's items live inside
+   .bookmark-children, which is itself inside a .bookmark-folder, so the child
+   combinators step over them — they are already bounded by the menu width and
+   have their own ellipsis further down. Folder titles need naming separately
+   because the span sits a level deeper, under .folder-title. */
+#bookmark-container .container > .bookmark-item span,
+#bookmark-container .container > .bookmark-folder > .folder-title span {
+  max-width: 128px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 #bookmark-container .container .bookmark-item:hover {
   background: rgba(24, 24, 24, 0.15);
 }
