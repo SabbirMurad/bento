@@ -55,6 +55,15 @@ function openDB() {
     return dbPromise;
 }
 
+// A still of the first second, kept as a blob so the gallery costs nothing to
+// draw. Only for uploads: reading pixels back out of a video is what a canvas
+// will not do across origins, which is why a video added by URL carries no
+// thumbnail and is drawn from the video itself instead.
+//
+// Resolves with null rather than hanging if the file turns out not to be
+// playable. It used to have no error path at all, so a file the decoder
+// refused left this promise pending for the life of the page and the upload
+// it was awaited by simply never finished.
 async function generateVideoThumbnail(file) {
     return new Promise((resolve) => {
         const video = document.createElement("video");
@@ -62,16 +71,22 @@ async function generateVideoThumbnail(file) {
         video.muted = true;
         video.currentTime = 1;
 
+        video.onerror = () => resolve(null);
+
         video.onloadeddata = () => {
-            const canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
 
-            canvas
-                .getContext("2d")
-                .drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas
+                    .getContext("2d")
+                    .drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            canvas.toBlob(blob => resolve(blob), "image/png");
+                canvas.toBlob(blob => resolve(blob), "image/png");
+            } catch {
+                resolve(null);
+            }
         };
     });
 }
@@ -95,6 +110,140 @@ async function saveUserVideo(file) {
         tx.oncomplete = () => resolve(videoObj);
         tx.onerror = reject;
     });
+}
+
+// How long a URL gets to prove it is a video before it is turned away. Only
+// metadata is asked for, so this is a headers-and-a-few-KB round trip, not a
+// download — but a host that accepts the connection and then says nothing
+// would otherwise leave the Add button spinning forever.
+const VIDEO_URL_PROBE_MS = 15000;
+
+// Loads far enough to know the URL really is a playable video, and hands back
+// its dimensions and duration. Everything the extension shows about a video by
+// URL comes from the video itself, so this doubles as the check that there is
+// anything there at all — a link that 404s, points at a web page, or holds a
+// codec this build cannot decode is rejected here rather than stored and left
+// to fail silently on the page every time a tab opens.
+function probeVideoUrl(url) {
+    return new Promise((resolve, reject) => {
+        const video = document.createElement("video");
+        let timer;
+
+        const done = outcome => {
+            clearTimeout(timer);
+            video.onloadedmetadata = null;
+            video.onerror = null;
+            // Stops the fetch that is still in flight when this rejects.
+            video.removeAttribute("src");
+            video.load();
+            outcome();
+        };
+
+        video.preload = "metadata";
+        video.muted = true;
+
+        video.onloadedmetadata = () => {
+            const { videoWidth, videoHeight, duration } = video;
+            // An audio file loads metadata perfectly happily and then draws
+            // nothing at all.
+            if (!videoWidth || !videoHeight) {
+                done(() => reject(new Error("That link has no picture in it.")));
+                return;
+            }
+            done(() => resolve({ width: videoWidth, height: videoHeight, duration }));
+        };
+
+        video.onerror = () => done(() => reject(
+            new Error("Could not play that link. It has to be a direct link to a video file.")
+        ));
+
+        timer = setTimeout(() => done(() => reject(
+            new Error("That link took too long to answer.")
+        )), VIDEO_URL_PROBE_MS);
+
+        video.src = url;
+    });
+}
+
+// The last path segment, which for a direct video link is the filename. Falls
+// back to the host, so something recognisable always ends up under the
+// thumbnail.
+function nameFromVideoUrl(parsed) {
+    const last = parsed.pathname.split("/").filter(Boolean).pop();
+    return last ? decodeURIComponent(last) : parsed.hostname;
+}
+
+async function saveUrlVideo(rawUrl) {
+    let parsed;
+    try {
+        parsed = new URL(rawUrl.trim());
+    } catch {
+        throw new Error("That is not a URL.");
+    }
+
+    // https only, and not out of preference. The new tab page is served from
+    // chrome-extension://, which is a secure context, so a plain http video is
+    // mixed content and blocked before it reaches the network — and media-src
+    // in the page's own CSP allows https and nothing else remote. Saying so
+    // here beats storing a link that can only ever fail.
+    if (parsed.protocol !== "https:") {
+        throw new Error("The link has to start with https.");
+    }
+
+    const existing = await loadAllVideos();
+    const already = existing.find(video => video.type === "url" && video.videoSrc === parsed.href);
+    if (already) return already;
+
+    await probeVideoUrl(parsed.href);
+
+    const db = await openDB();
+    const videoObj = {
+        id: crypto.randomUUID(),
+        type: "url",
+        name: nameFromVideoUrl(parsed),
+        videoSrc: parsed.href,
+        // Deliberately absent. See generateVideoThumbnail: a still cannot be
+        // taken from another origin's video, so the gallery draws these from
+        // the video element itself.
+        thumbnail: null,
+        createdAt: Date.now()
+    };
+
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction("videos", "readwrite");
+        tx.objectStore("videos").add(videoObj);
+        tx.oncomplete = () => resolve(videoObj);
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+// Presets are not deletable: syncPresetVideos only puts them back when
+// PRESETS_VERSION changes, so a deleted one would stay gone for good rather
+// than until the next reload.
+async function deleteVideo(id) {
+    const db = await openDB();
+    const tx = db.transaction("videos", "readwrite");
+    tx.objectStore("videos").delete(id);
+    await idbDone(tx);
+
+    // Whatever was showing has just stopped existing, so fall back the same
+    // way startup does when nothing has been chosen yet.
+    if (await getSelectedVideoId() === id) {
+        const videos = await loadAllVideos();
+        const next = videos.find(v => v.id === presetId(DEFAULT_PRESET))
+            || videos.find(v => v.type === "preset")
+            || videos[0];
+
+        if (next) {
+            await selectVideo(next);
+            return;
+        }
+
+        document.getElementById("bg-video").removeAttribute("src");
+        await setSelectedVideo(null);
+    }
+
+    renderVideoGallery();
 }
 
 // Awaiting this used to tell you nothing: the function handed back a resolved
@@ -200,24 +349,54 @@ async function renderVideoGallery() {
 
         if (isSelected) item.classList.add('selected');
 
-        const thumbSrc =
-            video.type === "user"
-                ? URL.createObjectURL(video.thumbnail)
-                : video.thumbnail;
+        // A video added by URL has no stored still — none can be taken across
+        // origins — so it shows the opening of the video itself. Muted, never
+        // played, and asked only for metadata: enough to seek to the first
+        // second and hold that frame, which costs a range request rather than
+        // the download a poster would have needed.
+        const fromVideo = video.type === "url";
 
         item.innerHTML = `
             <div class="bg-wrapper">
-              <img class="background">
+              ${fromVideo
+                ? '<video class="background" muted playsinline preload="metadata"></video>'
+                : '<img class="background">'}
               <div class="overlay"></div>
               <img src="/assets/icon/check-circle.svg" class="check">
+              ${video.type === "preset" ? '' : '<button class="remove" type="button" title="Remove">&times;</button>'}
             </div>
             <p></p>
         `;
 
+        const background = item.querySelector('.background');
+
+        if (fromVideo) {
+            background.addEventListener('loadedmetadata', () => {
+                // Past any fade-in at the very start, and clamped so a clip
+                // shorter than a second still shows something.
+                background.currentTime = Math.min(1, background.duration / 2 || 0);
+            }, { once: true });
+            background.src = video.videoSrc;
+        } else {
+            background.src = video.type === "user"
+                ? URL.createObjectURL(video.thumbnail)
+                : video.thumbnail;
+        }
+
         // Set rather than interpolated: a name is whatever the uploaded file
-        // was called, which is not something to paste into markup.
-        item.querySelector('.background').src = thumbSrc;
+        // was called or whatever the end of a URL happens to be, neither of
+        // which is something to paste into markup.
         item.querySelector('p').textContent = video.name;
+        item.title = video.type === "url" ? video.videoSrc : video.name;
+
+        const removeBtn = item.querySelector('.remove');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', e => {
+                // The whole tile selects the background it sits on.
+                e.stopPropagation();
+                deleteVideo(video.id);
+            });
+        }
 
         item.onclick = () => selectVideo(video);
         fragment.appendChild(item);
@@ -260,6 +439,50 @@ videoInput.addEventListener("change", async e => {
     const video = await saveUserVideo(file);
     await selectVideo(video);
 });
+
+// ---------------------------
+// Add a background by URL
+// ---------------------------
+const videoUrlInput = document.getElementById("video-url-input");
+const videoUrlAddBtn = document.getElementById("video-url-add");
+const videoUrlStatus = document.getElementById("video-url-status");
+
+function setVideoUrlStatus(message, isError) {
+    videoUrlStatus.textContent = message;
+    videoUrlStatus.classList.toggle("error", !!isError);
+}
+
+async function addVideoByUrl() {
+    const url = videoUrlInput.value.trim();
+    if (!url) return;
+
+    // The probe can take a moment on a slow host, and a button that looks
+    // ready to press again is an invitation to store the same link twice.
+    videoUrlAddBtn.disabled = true;
+    setVideoUrlStatus("Checking the link…");
+
+    try {
+        const video = await saveUrlVideo(url);
+        await selectVideo(video);
+
+        videoUrlInput.value = "";
+        setVideoUrlStatus(`Added ${video.name}.`);
+    } catch (error) {
+        setVideoUrlStatus(error.message, true);
+    } finally {
+        videoUrlAddBtn.disabled = false;
+    }
+}
+
+videoUrlAddBtn.addEventListener("click", addVideoByUrl);
+
+videoUrlInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") addVideoByUrl();
+});
+
+// A message about the last link is only noise once the box holds a different
+// one.
+videoUrlInput.addEventListener("input", () => setVideoUrlStatus(""));
 
 // Chrome throttles a hidden tab's timers and its rendering, but it does not
 // stop the decoder — a looping 1080p background goes on costing CPU on every

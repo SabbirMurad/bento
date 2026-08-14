@@ -26,7 +26,7 @@
     />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.coingecko.com https://suggestqueries.google.com;"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' blob: https:; connect-src 'self' https://api.coingecko.com https://suggestqueries.google.com;"
     />
   </head>
 
@@ -300,6 +300,28 @@
               <img src="assets/icon/upload.svg" alt="video-pick" />
               <input id="videoInput" type="file" accept=".mp4" />
             </div>
+            <p>Video URL</p>
+            <div class="video-url-row">
+              <input
+                id="video-url-input"
+                type="url"
+                placeholder="https://example.com/clip.mp4"
+                spellcheck="false"
+                autocomplete="off"
+              />
+              <button id="video-url-add" class="settings-button" type="button">
+                Add
+              </button>
+            </div>
+            <p class="settings-note">
+              A direct link to a video file. A YouTube or Vimeo page will not
+              work — those are web pages, not video files.
+            </p>
+            <span
+              id="video-url-status"
+              class="settings-status"
+              role="status"
+            ></span>
             <p>Blur</p>
             <div class="range-slider">
               <input

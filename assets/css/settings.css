@@ -566,6 +566,36 @@ input[type="color"]::-webkit-color-swatch {
   opacity: 0;
 }
 
+#settings-sidebar .video-url-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 0;
+}
+
+#settings-sidebar .video-url-row input {
+  flex: 1;
+  min-width: 0;
+  max-width: 420px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+#settings-sidebar .video-url-row input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+#settings-sidebar .video-url-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 #settings-sidebar .available-videos {
   display: flex;
   gap: 12px;
@@ -625,6 +655,37 @@ input[type="color"]::-webkit-color-swatch {
 
 #settings-sidebar .available-videos .item.selected .bg-wrapper .check {
   opacity: 1;
+}
+
+/* Kept off the tile until it is hovered: this is the one control here that
+   throws something away, and it sits on top of the one that only selects. */
+#settings-sidebar .available-videos .item .bg-wrapper .remove {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1;
+  color: #fff;
+  background: rgba(20, 20, 20, 0.72);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.25s ease, background 0.2s ease;
+}
+
+#settings-sidebar .available-videos .item .bg-wrapper:hover .remove,
+#settings-sidebar .available-videos .item .bg-wrapper .remove:focus-visible {
+  opacity: 1;
+}
+
+#settings-sidebar .available-videos .item .bg-wrapper .remove:hover {
+  background: #c0392b;
 }
 
 #settings-sidebar .available-videos .item p {
