@@ -10,6 +10,35 @@
 #clock-position-wrapper {
   position: absolute;
   bottom: 213px;
+  /* Sizes to the face and nothing else. Left to shrink-to-fit, an absolutely
+     positioned box gets the room between its own offset and the far edge —
+     which for a centred clock is half the window, since left: 50% is what the
+     centring class sets and the translate that follows it is not layout. The
+     faces all fit in that at their shipped size, but scaled up the ones made
+     of text run out of it and start wrapping: the glow clock broke onto three
+     lines at the top of the range, and the word grid squeezed its columns.
+     Now they keep their shape and run off the edges instead, which is at
+     least what was asked for. */
+  width: max-content;
+}
+
+/* The Scale control, set as a variable on the wrapper above and read by
+   whichever face is on screen.
+
+   zoom rather than transform: scale, because this has to change the size of
+   the box and not just how it is painted. #clock-position-wrapper shrinks to
+   fit its face, and everything that positions the clock measures that box —
+   the centring classes take half its width, the align buttons anchor its
+   edges, and arrange mode draws its outline and works out which edge it was
+   dropped nearest. A transform leaves all of those reading the unscaled size,
+   so a scaled-up clock would sit off-centre and drag by a box that no longer
+   matches what is on screen.
+
+   It goes on the face rather than on the wrapper because zoom scales an
+   element's own offsets too, and the wrapper's offsets are the saved position
+   — scaling would drag the clock across the screen. */
+#clock-position-wrapper .clock-item {
+  zoom: var(--clock-scale, 1);
 }
 
 #clock-wrapper {

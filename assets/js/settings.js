@@ -434,6 +434,55 @@ clockStyles.forEach(style => {
 
 applyClockStyle(localStorage.getItem('clock-style') || DEFAULT_CLOCK_STYLE);
 
+// Clock scale
+//
+// The faces are drawn at fixed pixel sizes, and which of them is legible from
+// across a room — or small enough to sit under a quote — is not something one
+// set of numbers can answer. This is the one control that covers all eleven.
+const CLOCK_SCALE_MIN = 0.2;
+const CLOCK_SCALE_MAX = 3;
+const DEFAULT_CLOCK_SCALE = 1;
+
+const clockPositionWrapper = document.getElementById('clock-position-wrapper');
+const clockScaleSlider = document.getElementById('clock-scale-slider');
+const clockScaleValue = clockScaleSlider.parentElement.querySelector('.range-slider__value');
+
+// arrange.js reads this to step the scale up and down from the current value.
+let clockScale = DEFAULT_CLOCK_SCALE;
+
+function clampClockScale(value) {
+    const scale = Number(value);
+
+    // Covers a key that was never written and one holding something
+    // unparseable: Number turns null and '' into 0, which is not a scale
+    // either.
+    if (!Number.isFinite(scale) || scale <= 0) return DEFAULT_CLOCK_SCALE;
+
+    // Two decimals because arrange mode steps by a proportion of the current
+    // value rather than by a fixed amount, and 1.157625 has nowhere to show.
+    return Math.round(Math.min(Math.max(scale, CLOCK_SCALE_MIN), CLOCK_SCALE_MAX) * 100) / 100;
+}
+
+// Sets the scale and brings the slider and its readout along, wherever the
+// change came from. Saving is left to the caller so that the value restored on
+// load is not written straight back — sync.js pushes every localStorage write
+// out to chrome.storage.
+function applyClockScale(value) {
+    clockScale = clampClockScale(value);
+
+    clockPositionWrapper.style.setProperty('--clock-scale', clockScale);
+    clockScaleSlider.value = clockScale;
+    clockScaleValue.textContent = clockScale;
+
+    return clockScale;
+}
+
+clockScaleSlider.addEventListener('input', () => {
+    localStorage.setItem('clock-scale', applyClockScale(clockScaleSlider.value));
+});
+
+applyClockScale(localStorage.getItem('clock-scale'));
+
 const settingTabIcons = document.querySelectorAll('#settings-sidebar .tabs li');
 
 document.querySelector('#settings-sidebar .tabs').setAttribute('role', 'tablist');
@@ -849,12 +898,64 @@ function setHighlight(index) {
 }
 
 // ---------------------------
+// Search bar width
+// ---------------------------
+// This is the resting width and nothing else. Focus animates the bar out to
+// SEARCH_FOCUS_WIDTH — the width it ships at — so however narrow it has been
+// set to sit on the page, it is always the same size once you are typing in
+// it. Setting it wider than that is allowed, and focusing then draws it back
+// in; the focused size is fixed either way.
+const SEARCH_FOCUS_WIDTH = 684;
+const SEARCH_WIDTH_MIN = 240;
+const SEARCH_WIDTH_MAX = 1200;
+
+const searchWidthSlider = document.getElementById('search-width-slider');
+const searchWidthValue = searchWidthSlider.parentElement.querySelector('.range-slider__value');
+
+// Read by unfocusSearchBar to animate the bar back to its resting size.
+let searchRestWidth = SEARCH_FOCUS_WIDTH;
+
+function applySearchWidth(value) {
+    const width = Number(value);
+
+    // Only a value that is not a number at all falls back to the size the bar
+    // ships at — a missing key or a blank one, which Number would otherwise
+    // turn into a perfectly clampable 0. A real number is clamped however far
+    // out of range it is: dragging the grip in arrange mode past the left of
+    // the bar computes a negative width, and that has to land on the minimum
+    // rather than snapping the bar back to its default.
+    const usable = value !== null && value !== '' && Number.isFinite(width);
+
+    searchRestWidth = usable
+        ? Math.round(Math.min(Math.max(width, SEARCH_WIDTH_MIN), SEARCH_WIDTH_MAX))
+        : SEARCH_FOCUS_WIDTH;
+
+    searchWidthSlider.value = searchRestWidth;
+    searchWidthValue.textContent = searchRestWidth;
+    searchWrapper.style.setProperty('--search-rest-width', `${searchRestWidth}px`);
+
+    return searchRestWidth;
+}
+
+searchWidthSlider.addEventListener('input', () => {
+    localStorage.setItem('search-width', applySearchWidth(searchWidthSlider.value));
+});
+
+applySearchWidth(localStorage.getItem('search-width'));
+
+// Only now is the bar allowed to animate its width — see the note on the
+// transition in search.css.
+requestAnimationFrame(() => {
+    searchWrapper.style.setProperty('--search-width-anim', '0.35s');
+});
+
+// ---------------------------
 // Search bar focus animation (center + blur backdrop)
 // ---------------------------
 const searchFocusOverlay = document.getElementById('search-focus-overlay');
 let searchUnfocusTimer;
 
-const SEARCH_POSITION_PROPS = ['position', 'left', 'top', 'right', 'bottom', 'transform'];
+const SEARCH_POSITION_PROPS = ['position', 'left', 'top', 'right', 'bottom', 'transform', 'width'];
 const SEARCH_ANIM_MS = 350;
 let savedSearchInlineStyles = null;
 let searchBarFocused = false;
@@ -877,13 +978,14 @@ function restoreAllSearchInlineProps() {
 // over left/top/transform from the position classes (.horizontal-center /
 // .vertical-center use `!important`, so plain inline styles would be
 // overridden by them without also using `important` here).
-function freezeSearchBarAt(rect) {
+function freezeSearchBarAt(rect, width) {
     searchWrapper.style.setProperty('position', 'fixed', 'important');
     searchWrapper.style.setProperty('left', `${rect.left}px`, 'important');
     searchWrapper.style.setProperty('top', `${rect.top}px`, 'important');
     searchWrapper.style.setProperty('right', 'auto', 'important');
     searchWrapper.style.setProperty('bottom', 'auto', 'important');
     searchWrapper.style.setProperty('transform', 'none', 'important');
+    searchWrapper.style.setProperty('width', `${width}px`);
 }
 
 function focusSearchBar() {
@@ -909,13 +1011,25 @@ function focusSearchBar() {
 
     const rect = searchWrapper.getBoundingClientRect();
 
+    // Both measured before anything is written, so a focus that lands while an
+    // unfocus is still animating starts from where the bar actually is rather
+    // than from where it was going.
+    //
+    // The width has to be the used one and not rect.width: box-sizing is
+    // content-box here, so the rect also carries the 12px of padding either
+    // side and the glass card's border. Pinning that as the width would widen
+    // the bar by 26px the instant it was written. That same 26px is what the
+    // target position below has to add back to centre the bar on screen.
+    const width = parseFloat(getComputedStyle(searchWrapper).width);
+    const chrome = rect.width - width;
+
     // Remember where the bar rests so unfocus can animate back to it. Reading
     // it again later would mean briefly restoring the real styles to measure
     // them, and that round trip through `position: absolute` cancels the
     // transition — the bar snaps home instead of sliding.
     searchRestPosition = { left: rect.left, top: rect.top };
 
-    freezeSearchBarAt(rect);
+    freezeSearchBarAt(rect, width);
 
     // Force layout so the browser registers the frozen starting point
     // before animating to the target, otherwise the transition is skipped.
@@ -925,11 +1039,15 @@ function focusSearchBar() {
     searchWrapper.classList.add('focused');
     searchFocusOverlay.classList.add('active');
 
-    const targetLeft = window.innerWidth / 2 - rect.width / 2;
+    // Centred on the width the bar is going to end up at rather than the one
+    // it is leaving, so the slide and the resize land together on the middle
+    // of the screen.
+    const targetLeft = window.innerWidth / 2 - (SEARCH_FOCUS_WIDTH + chrome) / 2;
     const targetTop = window.innerHeight / 2 - 200 - rect.height / 2;
 
     searchWrapper.style.setProperty('left', `${targetLeft}px`, 'important');
     searchWrapper.style.setProperty('top', `${targetTop}px`, 'important');
+    searchWrapper.style.setProperty('width', `${SEARCH_FOCUS_WIDTH}px`);
     // No scale here: a transform:scale() on this element combined with the
     // history dropdown's clipped/ellipsis text underneath causes the text to
     // fail to paint in Chromium (confirmed — icon rendered, text vanished).
@@ -952,6 +1070,11 @@ function unfocusSearchBar() {
     // has arrived, where swapping them in is invisible.
     searchWrapper.style.setProperty('left', `${searchRestPosition.left}px`, 'important');
     searchWrapper.style.setProperty('top', `${searchRestPosition.top}px`, 'important');
+    // searchRestPosition was measured at the resting width, so the two agree
+    // and the bar arrives home the size it left. Restoring the real styles
+    // afterwards hands the width back to --search-rest-width at the same
+    // value, which is why that swap stays invisible.
+    searchWrapper.style.setProperty('width', `${searchRestWidth}px`);
 
     searchUnfocusTimer = setTimeout(() => {
         restoreAllSearchInlineProps();

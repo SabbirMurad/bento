@@ -4,11 +4,19 @@
   bottom: 57px;
   padding: 0px 12px;
   display: flex;
-  width: 684px;
+  /* The resting width only. Focus takes the bar to the 684px it ships at and
+     writes that on the element directly, so this is the width it sits at when
+     nobody is typing. Centred is the default position, and translateX(-50%)
+     is recomputed as the width animates, so it stays centred the whole way
+     rather than growing out of one side. */
+  width: var(--search-rest-width, 684px);
   height: 40px;
   border-radius: 12px;
   align-items: center;
-  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1), top 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
+  /* Width alone is timed by a variable, held at 0s until settings.js has put
+     the saved width in place. Otherwise every new tab opens with the bar
+     animating out of the 684px above and into whatever was saved. */
+  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1), top 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease, width var(--search-width-anim, 0s) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #search-wrapper.focused {

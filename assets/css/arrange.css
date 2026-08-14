@@ -32,6 +32,25 @@ body.arranging #arrange-bar {
   white-space: nowrap;
 }
 
+/* Whatever is being changed right now — the clock's scale, the search bar's
+   width — shown while it moves and then left to fade. It keeps its width when
+   hidden so the bar does not jump about as it comes and goes. */
+#arrange-bar #arrange-readout {
+  min-width: 46px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #10231f;
+  background: #1abc9c;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#arrange-bar #arrange-readout.on {
+  opacity: 1;
+}
+
 #arrange-bar button {
   border: none;
   border-radius: 8px;
@@ -121,8 +140,55 @@ body.arranging .arrange-target.arrange-dragging {
   transition: none !important;
 }
 
+/* The search bar's resize grip, sat on the middle of the right-hand side of
+   its outline. The search bar is the only widget with one — it is the only
+   one whose width is worth setting by hand.
+
+   The outline is drawn 6px clear of the border box with a 1px stroke, so a
+   10px dot hung 11px off the right edge has its centre on that line. */
+#search-resize-handle {
+  display: none;
+  position: absolute;
+  top: 50%;
+  right: -11px;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #1abc9c;
+  box-shadow: 0 0 0 1.5px rgba(16, 35, 31, 0.55);
+  cursor: ew-resize;
+  z-index: 1;
+}
+
+/* A 10px dot is small to take hold of, so the part that answers the pointer
+   is wider than the part you can see. */
+#search-resize-handle::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+}
+
+/* The blanket rule above takes pointer events off everything inside a widget
+   so nothing can swallow a drag. The grip is the exception: taking hold of it
+   is the whole point, and arrange.js stops the event there so the bar itself
+   does not also get picked up and moved. */
+body.arranging #search-wrapper #search-resize-handle {
+  display: block;
+  pointer-events: auto;
+}
+
+/* Same reasoning as arrange-dragging above: the width transition would leave
+   the grip trailing behind the pointer for a third of a second. */
+body.arranging .arrange-target.arrange-resizing {
+  outline-color: #1abc9c;
+  outline-style: solid;
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   #arrange-bar,
+  #arrange-bar #arrange-readout,
   #arrange-guide-x,
   #arrange-guide-y {
     transition: none;

@@ -7,11 +7,22 @@
 // window resizes, which a hard left offset would not.
 const ARRANGE_SNAP = 14;
 
+// Each notch of the wheel is a proportion of the current scale rather than a
+// fixed amount, so getting from 0.2 to 1 takes about as many notches as
+// getting from 1 to 5. A fixed step fine enough to be usable at 0.2 would be
+// an eternity of scrolling at the top of the range.
+const ARRANGE_SCALE_STEP = 1.05;
+
+// How long a value reads out for after it stops changing.
+const ARRANGE_READOUT_LINGER = 1400;
+
 const arrangeBar = document.getElementById('arrange-bar');
 const arrangeStartBtn = document.getElementById('arrange-start');
 const arrangeDoneBtn = document.getElementById('arrange-done');
 const arrangeGuideX = document.getElementById('arrange-guide-x');
 const arrangeGuideY = document.getElementById('arrange-guide-y');
+const arrangeReadout = document.getElementById('arrange-readout');
+const searchResizeHandle = document.getElementById('search-resize-handle');
 
 const arrangeTargets = [...widgetPositionControls.keys()]
     .map(id => document.getElementById(id))
@@ -26,8 +37,97 @@ function showGuides(x, y) {
 
 function setArranging(on) {
     document.body.classList.toggle('arranging', on);
-    if (!on) showGuides(false, false);
+    if (!on) {
+        showGuides(false, false);
+        hideReadout();
+    }
 }
+
+// ---------------------------
+// Readout
+// ---------------------------
+// One badge in the bar for whichever number is currently being changed.
+let arrangeReadoutTimer;
+
+function hideReadout() {
+    clearTimeout(arrangeReadoutTimer);
+    arrangeReadout.classList.remove('on');
+}
+
+function showReadout(text) {
+    arrangeReadout.textContent = text;
+    arrangeReadout.classList.add('on');
+
+    clearTimeout(arrangeReadoutTimer);
+    arrangeReadoutTimer = setTimeout(() => {
+        arrangeReadout.classList.remove('on');
+    }, ARRANGE_READOUT_LINGER);
+}
+
+// ---------------------------
+// Size
+// ---------------------------
+// The clock scales and the search bar takes a width, and neither is something
+// every widget has — so both are wired up by name rather than dressed up as a
+// general feature. Each one goes through the same apply function the settings
+// slider does, so whichever you reach for, the other is showing the same
+// number by the time you look at it.
+
+// Not passive: the point of the handler is to take the wheel off the page.
+// Ctrl held is the browser's own zoom — and a trackpad pinch — which is left
+// alone rather than quietly turned into something else.
+document.getElementById('clock-position-wrapper').addEventListener('wheel', e => {
+    if (!document.body.classList.contains('arranging') || e.ctrlKey) return;
+    e.preventDefault();
+
+    const step = e.deltaY < 0 ? ARRANGE_SCALE_STEP : 1 / ARRANGE_SCALE_STEP;
+    const scale = applyClockScale(clockScale * step);
+
+    localStorage.setItem('clock-scale', scale);
+    showReadout(`${scale}×`);
+}, { passive: false });
+
+let searchResize = null;
+
+searchResizeHandle.addEventListener('pointerdown', e => {
+    if (!document.body.classList.contains('arranging')) return;
+
+    // The bar underneath is a drag target. Without this, taking hold of the
+    // grip would pick the whole widget up and move it as well.
+    e.stopPropagation();
+    e.preventDefault();
+
+    searchResize = {
+        startX: e.clientX,
+        startWidth: searchRestWidth,
+        // A centred bar grows from its middle, so the edge under the pointer
+        // only travels half as far as the width changes — it has to change by
+        // twice the drag to keep up. Anchored to an edge, the two move
+        // together. A right-anchored bar grows leftwards and the grip stays
+        // put, which is the one case where it cannot follow the pointer.
+        factor: searchWrapper.classList.contains('horizontal-center') ? 2 : 1,
+    };
+
+    searchResizeHandle.setPointerCapture(e.pointerId);
+    searchWrapper.classList.add('arrange-resizing');
+});
+
+searchResizeHandle.addEventListener('pointermove', e => {
+    if (!searchResize) return;
+
+    const travelled = (e.clientX - searchResize.startX) * searchResize.factor;
+    showReadout(`${applySearchWidth(searchResize.startWidth + travelled)}px`);
+});
+
+['pointerup', 'pointercancel'].forEach(type => searchResizeHandle.addEventListener(type, () => {
+    if (!searchResize) return;
+    searchResize = null;
+
+    searchWrapper.classList.remove('arrange-resizing');
+    // Saved on the way out rather than on every move: one write, and one
+    // push through sync.js, for the whole drag.
+    localStorage.setItem('search-width', searchRestWidth);
+}));
 
 arrangeStartBtn.addEventListener('click', () => {
     // The sidebar covers the page it is about to ask you to rearrange.
@@ -52,7 +152,11 @@ document.addEventListener('click', e => {
     }
 }, true);
 
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+// Keeps a widget inside the window, unless it is bigger than the window — a
+// clock scaled up past the edges has no range to be held in, and max drops
+// below min. Clamping then pins it to one spot it cannot be dragged out of,
+// so that case is let through instead.
+const clamp = (value, min, max) => (max < min ? value : Math.min(Math.max(value, min), max));
 
 let arrangeDrag = null;
 

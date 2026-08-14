@@ -210,6 +210,8 @@
             class="ghost-typed"
           ></span><span class="ghost-rest"></span></div>
         <div id="search-history-dropdown"></div>
+        <!-- Shown only in arrange mode; drag it to set the resting width. -->
+        <div id="search-resize-handle" aria-hidden="true"></div>
       </div>
 
       <!-- Quote -->
@@ -221,7 +223,11 @@
       <div id="arrange-guide-x"></div>
       <div id="arrange-guide-y"></div>
       <div id="arrange-bar" class="glass-card">
-        <span>Drag a widget to move it. It snaps to the centre lines.</span>
+        <span
+          >Drag to move — it snaps to the centre lines. Scroll over the clock
+          to resize it.</span
+        >
+        <span id="arrange-readout" aria-live="polite"></span>
         <button id="arrange-done" type="button">Done</button>
       </div>
 
@@ -415,6 +421,21 @@
               </div>
             </div>
             <div class="item">
+              <p>Scale</p>
+              <div class="range-slider">
+                <input
+                  class="range-slider__range"
+                  type="range"
+                  value="1"
+                  min="0.2"
+                  max="3"
+                  step="0.05"
+                  id="clock-scale-slider"
+                />
+                <span class="range-slider__value">1</span>
+              </div>
+            </div>
+            <div class="item">
               <p>Text Color</p>
               <input type="color" />
               <input
@@ -493,6 +514,20 @@
               <span>Vertical Layout</span>
               <label class="switch">
                 <input type="checkbox" id="shortcut-layout-toggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="item">
+              <span>Icon Background</span>
+              <label class="switch">
+                <input type="checkbox" id="shortcut-card-toggle" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="item">
+              <span>Black &amp; White Icons</span>
+              <label class="switch">
+                <input type="checkbox" id="shortcut-mono-toggle" />
                 <span class="slider"></span>
               </label>
             </div>
