@@ -654,6 +654,36 @@ shortcutLayoutToggle.addEventListener('change', () => {
     localStorage.setItem('shortcuts-layout', vertical ? 'vertical' : 'horizontal');
 });
 
+// The glass card behind each icon. On is what ships, so — as with the layout
+// above — the saved value is only ever read to find out that it was switched
+// off. The class goes on the wrapper, which survives the rewrites loadShortcuts
+// does to its children; see the note in shortcuts.css.
+const shortcutCardToggle = document.getElementById('shortcut-card-toggle');
+
+const shortcutCards = localStorage.getItem('shortcuts-icon-card') !== 'off';
+shortcutsLayoutWrapper.classList.toggle('no-card', !shortcutCards);
+shortcutCardToggle.checked = shortcutCards;
+
+shortcutCardToggle.addEventListener('change', () => {
+    const on = shortcutCardToggle.checked;
+    shortcutsLayoutWrapper.classList.toggle('no-card', !on);
+    localStorage.setItem('shortcuts-icon-card', on ? 'on' : 'off');
+});
+
+// Colour is what ships, so unlike the two above this one is read the other way
+// round — the saved value has to say 'on' for anything to change.
+const shortcutMonoToggle = document.getElementById('shortcut-mono-toggle');
+
+const shortcutMono = localStorage.getItem('shortcuts-icon-mono') === 'on';
+shortcutsLayoutWrapper.classList.toggle('mono', shortcutMono);
+shortcutMonoToggle.checked = shortcutMono;
+
+shortcutMonoToggle.addEventListener('change', () => {
+    const on = shortcutMonoToggle.checked;
+    shortcutsLayoutWrapper.classList.toggle('mono', on);
+    localStorage.setItem('shortcuts-icon-mono', on ? 'on' : 'off');
+});
+
 // ---------------------------
 // Shortcuts spacing control
 // ---------------------------

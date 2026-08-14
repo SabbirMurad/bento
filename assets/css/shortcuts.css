@@ -43,6 +43,57 @@
   }
 }
 
+/* Icon Background switched off: the glass card comes away and the icons sit
+   straight on the wallpaper.
+
+   Set on the wrapper rather than by taking .glass-card off each tile, because
+   loadShortcuts rewrites its children every time a shortcut is added, removed
+   or reordered — the wrapper itself survives all of that, the same way the
+   .vertical layout class does.
+
+   The border is only made transparent, not removed. box-sizing is content-box
+   here, so dropping the 1px would pull every tile in by 2px and shuffle the
+   whole row. */
+#shortcuts-wrapper.no-card .item {
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* The card was doing the work of separating the icons from whatever is behind
+   them. Without it a pale favicon on a pale background disappears, so the
+   icons get their own lift instead. */
+#shortcuts-wrapper.no-card .item img {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+}
+
+/* The edit icon is drawn smaller than a favicon so it does not crowd the tile
+   it sits in. With no tile there is nothing to crowd, and being the odd one
+   out in a row of bare icons is what shows instead. */
+#shortcuts-wrapper.no-card .item.add-more img {
+  width: 24px;
+  height: 24px;
+}
+
+/* Black & White Icons. Favicons are a wall of unrelated brand colours, which
+   is the one thing on this page the user cannot restyle — every other colour
+   here comes from a picker. Draining them lets the wallpaper be the only
+   colour on screen.
+
+   The combination is spelled out rather than composed, because filter takes a
+   whole list at once: a second rule setting filter replaces the first outright
+   instead of adding to it, so grayscale on its own would quietly drop the lift
+   the bare icons rely on. */
+#shortcuts-wrapper.mono .item img {
+  filter: grayscale(1);
+}
+
+#shortcuts-wrapper.no-card.mono .item img {
+  filter: grayscale(1) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+}
+
 #shortcuts-wrapper .item .container {
   /* background: #ffffff33; */
   border-radius: 20px;
