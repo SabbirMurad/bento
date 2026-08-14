@@ -259,9 +259,10 @@ function renderMainBookmark(nodes) {
             item.className = "bookmark-item";
             item.classList.add("glass-card");
             item.innerHTML = `
-                <img src="${getFavicon(node.url)}" alt="${node.title || node.url}">
+                <img alt="${node.title || node.url}">
                 <span>${node.title || node.url}</span>
             `;
+            applyLinkIcon(item.querySelector('img'), node.url);
 
             container.appendChild(item);
         }
@@ -312,9 +313,10 @@ function renderBookmarkChildren(nodes, folderId) {
             item.draggable = true;
             item.dataset.bmId = node.id;
             item.innerHTML = `
-                <img src="${getFavicon(node.url)}" alt="${node.title || node.url}">
+                <img alt="${node.title || node.url}">
                 <span>${node.title || node.url}</span>
             `;
+            applyLinkIcon(item.querySelector('img'), node.url);
 
             container.appendChild(item);
         }

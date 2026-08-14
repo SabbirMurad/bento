@@ -1,15 +1,3 @@
-// ---------------------------
-// Helper: Get domain
-// ---------------------------
-function getDomain(url) {
-    try {
-        const { hostname } = new URL(url);
-        return hostname;
-    } catch {
-        return null;
-    }
-}
-
 
 // What a fresh profile starts with. Written to storage the first time rather
 // than only drawn, so that removing them sticks: once the key exists it is an
@@ -52,22 +40,16 @@ async function loadShortcuts() {
     for (let i = shortcuts.length - 1; i >= 0; i--) {
         const url = shortcuts[i];
 
-        let faviconLink = "assets/icon/web.svg";
-        let domain = getDomain(url);
-        if (domain) {
-            let fav = getFavicon(domain);
-            if (fav) faviconLink = fav;
-        }
-
         // MAIN SHORTCUT LIST
         const shortcut = document.createElement('a');
         shortcut.href = url;
         shortcut.classList.add('item', 'glass-card');
         shortcut.innerHTML = `
             <div class="container">
-                <img src="${faviconLink}" alt="Shortcut">
+                <img class="favicon" alt="Shortcut">
             <div/>
         `;
+        applyLinkIcon(shortcut.querySelector('.favicon'), url);
         shortcutsWrapper.prepend(shortcut);
 
 
@@ -78,11 +60,12 @@ async function loadShortcuts() {
         sidebarShortcuts.innerHTML = `
             <img src="assets/icon/drug.svg" alt="Drag" draggable="false">
             <div class="item">
-                <img src="${faviconLink}" alt="Shortcut">
+                <img class="favicon" alt="Shortcut">
                 <span>${url}</span>
                 <img class="close" src="assets/icon/close.svg" alt="Close">
             </div>
         `;
+        applyLinkIcon(sidebarShortcuts.querySelector('.favicon'), url);
 
         // DELETE BUTTON
         const closeBtn = sidebarShortcuts.querySelector('.close');

@@ -910,12 +910,19 @@
     <script src="assets/js/sync.js"></script>
     <script src="assets/js/utils.js"></script>
     <script src="assets/js/settings.js"></script>
+    <!-- Ahead of bookmark.js and shortcuts.js, which is a real requirement
+         and not tidiness: both draw a list of links as soon as chrome answers
+         them, and applyLinkIcon needs findGoogleProduct from here to tell a
+         spreadsheet from a document. Loaded after them, that lookup was
+         sometimes still undefined when the lists drew, and every Google link
+         fell back to the one favicon docs.google.com has. It needs
+         makeActivatable from settings.js, so it cannot move any earlier. -->
+    <script src="assets/js/google.js"></script>
     <script src="assets/js/clock.js"></script>
     <script src="assets/js/bookmark.js"></script>
     <script src="assets/js/shortcuts.js"></script>
     <script src="assets/js/background-video.js"></script>
     <script src="assets/js/background.js"></script>
-    <script src="assets/js/google.js"></script>
     <script src="assets/js/quote.js"></script>
     <!-- After settings.js: reads the position controls it registers. -->
     <script src="assets/js/arrange.js"></script>

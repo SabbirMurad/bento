@@ -799,7 +799,7 @@ function renderDropdown() {
             // into an innerHTML string.
             el.innerHTML =
                 '<img alt=""><span class="history-title"></span><span class="history-url"></span>';
-            el.querySelector('img').src = getFavicon(url);
+            applyLinkIcon(el.querySelector('img'), url);
             el.querySelector('.history-title').textContent = title || url;
             el.querySelector('.history-url').textContent = url;
             el.addEventListener('mousedown', e => {

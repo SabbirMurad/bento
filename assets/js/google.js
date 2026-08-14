@@ -120,6 +120,56 @@ function applyGoogleIcon(img, item) {
     });
 }
 
+// Which catalogue entry a link belongs to, if any. Shortcuts ask this before
+// falling back to the favicon service, so a link to a spreadsheet gets the
+// same icon here as it does in the panel.
+//
+// The service answers per host and a host has only one favicon, which is the
+// whole reason the icons above exist: Docs, Sheets, Slides and Forms all live
+// on docs.google.com and come back wearing the same one. What separates them
+// is the first segment of the path, and that segment is the same in a link to
+// a real document as it is in the landing page recorded above —
+// /spreadsheets/u/0/ and /spreadsheets/d/<id>/edit both start at
+// "spreadsheets".
+//
+// A host only one product uses is matched on the host alone, and has to be:
+// Drive's landing page is /u/0/ while a real folder sits under /drive/, so
+// checking the segment there would only ever miss.
+const googleProductsByHost = new Map();
+
+function firstPathSegment(pathname) {
+    return pathname.split('/')[1] || '';
+}
+
+GOOGLE_CATALOGUE.forEach(item => {
+    const { hostname, pathname } = new URL(item.url);
+    const products = googleProductsByHost.get(hostname) || [];
+
+    products.push({ item, segment: firstPathSegment(pathname) });
+    googleProductsByHost.set(hostname, products);
+});
+
+function findGoogleProduct(url) {
+    let parsed;
+    try {
+        parsed = new URL(url);
+    } catch {
+        return null;
+    }
+
+    const products = googleProductsByHost.get(parsed.hostname);
+    if (!products) return null;
+    if (products.length === 1) return products[0].item;
+
+    const segment = firstPathSegment(parsed.pathname);
+    const match = products.find(product => product.segment === segment);
+
+    // A page on a shared host that is not one of the products — a drawing on
+    // docs.google.com, a search on www.google.com — is left to the favicon
+    // service, which for those is the right answer anyway.
+    return match ? match.item : null;
+}
+
 function renderGooglePanel() {
     googleItemsWrapper.replaceChildren();
 
