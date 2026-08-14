@@ -486,6 +486,69 @@ function renderOutlineClock(now, parts) {
 }
 
 // ---------------------------
+// v14 — dot matrix
+// ---------------------------
+// Which of a 5x7 (1x7 for the colon) grid of dots each character lights,
+// row by row, top to bottom.
+const DOT_MATRIX_FONT = {
+    '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
+    '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+    '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+    '3': ['11111', '00010', '00100', '00010', '00001', '10001', '01110'],
+    '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+    '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+    '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
+    '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+    '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+    '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
+    ':': ['0', '0', '1', '0', '1', '0', '0'],
+};
+
+const dmRow = document.querySelector('#dotmatrix-clock-wrapper .dm-row');
+const dmChars = [];
+
+// Built once for a fixed "HH:MM" shape — a clock face's layout does not
+// change minute to minute, only which dots in it are lit — so only
+// setDotMatrixChar runs on every tick.
+'HH:MM'.split('').forEach(placeholder => {
+    const isColon = placeholder === ':';
+    const width = isColon ? 1 : 5;
+
+    const char = document.createElement('div');
+    char.className = isColon ? 'dm-char dm-colon' : 'dm-char';
+    char.style.setProperty('--dm-cols', width);
+
+    const dots = [];
+    for (let i = 0; i < width * 7; i++) {
+        const dot = document.createElement('span');
+        dot.className = 'dm-dot';
+        char.appendChild(dot);
+        dots.push(dot);
+    }
+
+    dmRow.appendChild(char);
+    dmChars.push(dots);
+});
+
+function setDotMatrixChar(index, value) {
+    const pattern = DOT_MATRIX_FONT[value];
+    if (!pattern) return;
+
+    const bits = pattern.join('');
+    dmChars[index].forEach((dot, i) => dot.classList.toggle('lit', bits[i] === '1'));
+}
+
+const dmMeridiem = document.querySelector('#dotmatrix-clock-wrapper .dm-meridiem');
+const dmDate = document.querySelector('#dotmatrix-clock-wrapper .dm-date');
+
+function renderDotMatrixClock(now, parts) {
+    `${parts.hour12}:${parts.minutes}`.split('').forEach((ch, index) => setDotMatrixChar(index, ch));
+
+    dmMeridiem.textContent = parts.meridiem;
+    dmDate.textContent = shortDate(now).toUpperCase();
+}
+
+// ---------------------------
 // Tick
 // ---------------------------
 
@@ -505,6 +568,7 @@ const CLOCK_FACES = {
     'clock-v9': now => renderReelClock(now),
     'clock-v10': (now, parts) => renderArcClock(now, parts),
     'clock-v11': (now, parts) => renderOutlineClock(now, parts),
+    'clock-v14': (now, parts) => renderDotMatrixClock(now, parts),
 };
 
 let activeClockFace = localStorage.getItem('clock-style') || DEFAULT_CLOCK_STYLE;

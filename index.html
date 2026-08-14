@@ -189,6 +189,16 @@
           </div>
           <div class="outline-date">Monday 10 August</div>
         </div>
+
+        <!-- Dot grids are built by clock.js from DOT_MATRIX_FONT. -->
+        <div id="dotmatrix-clock-wrapper" class="clock-item clock-v14">
+          <div class="dm-row"></div>
+          <div class="dm-foot">
+            <span class="dm-meridiem"></span>
+            <span class="rule"></span>
+            <span class="dm-date"></span>
+          </div>
+        </div>
       </div>
 
       <!-- Shortcuts -->
@@ -276,6 +286,7 @@
         <div id="settings-sidebar" class="sidebar glass-card">
           <ul class="tabs">
             <li class="active" setting-btn="general">General</li>
+            <li setting-btn="preset">Preset</li>
             <li setting-btn="background">Background</li>
             <li setting-btn="clock">Clock</li>
             <li setting-btn="bookmark">Bookmark</li>
@@ -294,77 +305,97 @@
             class="item-wrapper"
             item-name="background"
           >
-            <div class="available-videos"></div>
-            <div class="video-selector">
-              <p>Upload Video</p>
-              <img src="assets/icon/upload.svg" alt="video-pick" />
-              <input id="videoInput" type="file" accept=".mp4" />
+            <ul class="sub-tabs">
+              <li class="active" sub-tab-btn="presets">Presets</li>
+              <li sub-tab-btn="uploads">Uploaded videos</li>
+              <li sub-tab-btn="links">Added links</li>
+              <li sub-tab-btn="other">Other settings</li>
+            </ul>
+
+            <div class="sub-pane active" sub-pane="presets">
+              <div class="available-videos" data-video-type="preset"></div>
             </div>
-            <p>Video URL</p>
-            <div class="video-url-row">
-              <input
-                id="video-url-input"
-                type="url"
-                placeholder="https://example.com/clip.mp4"
-                spellcheck="false"
-                autocomplete="off"
-              />
-              <button id="video-url-add" class="settings-button" type="button">
-                Add
-              </button>
+
+            <div class="sub-pane" sub-pane="uploads">
+              <div class="available-videos" data-video-type="user"></div>
+              <div class="video-selector">
+                <p>Upload Video</p>
+                <img src="assets/icon/upload.svg" alt="video-pick" />
+                <input id="videoInput" type="file" accept=".mp4" />
+              </div>
             </div>
-            <p class="settings-note">
-              A direct link to a video file. A YouTube or Vimeo page will not
-              work — those are web pages, not video files.
-            </p>
-            <span
-              id="video-url-status"
-              class="settings-status"
-              role="status"
-            ></span>
-            <p>Blur</p>
-            <div class="range-slider">
-              <input
-                class="range-slider__range"
-                type="range"
-                value="0"
-                min="0"
-                max="50"
-                id="bg-blur-slider"
-              />
-              <span class="range-slider__value">0</span>
+
+            <div class="sub-pane" sub-pane="links">
+              <div class="available-videos" data-video-type="url"></div>
+              <p>Video URL</p>
+              <div class="video-url-row">
+                <input
+                  id="video-url-input"
+                  type="url"
+                  placeholder="https://example.com/clip.mp4"
+                  spellcheck="false"
+                  autocomplete="off"
+                />
+                <button id="video-url-add" class="settings-button" type="button">
+                  Add
+                </button>
+              </div>
+              <p class="settings-note">
+                A direct link to a video file. A YouTube or Vimeo page will not
+                work — those are web pages, not video files.
+              </p>
+              <span
+                id="video-url-status"
+                class="settings-status"
+                role="status"
+              ></span>
             </div>
-            <p>Shadow</p>
-            <div class="range-slider">
-              <input
-                class="range-slider__range"
-                type="range"
-                value="0"
-                min="0"
-                max="100"
-                id="bg-shadow-slider"
-              />
-              <span class="range-slider__value">0</span>
+
+            <div class="sub-pane" sub-pane="other">
+              <p>Blur</p>
+              <div class="range-slider">
+                <input
+                  class="range-slider__range"
+                  type="range"
+                  value="0"
+                  min="0"
+                  max="50"
+                  id="bg-blur-slider"
+                />
+                <span class="range-slider__value">0</span>
+              </div>
+              <p>Shadow</p>
+              <div class="range-slider">
+                <input
+                  class="range-slider__range"
+                  type="range"
+                  value="0"
+                  min="0"
+                  max="100"
+                  id="bg-shadow-slider"
+                />
+                <span class="range-slider__value">0</span>
+              </div>
+              <p>Blend Mode</p>
+              <select id="bg-blend-mode">
+                <option value="normal">Normal</option>
+                <option value="multiply">Multiply</option>
+                <option value="screen">Screen</option>
+                <option value="overlay">Overlay</option>
+                <option value="darken">Darken</option>
+                <option value="lighten">Lighten</option>
+                <option value="color-dodge">Color Dodge</option>
+                <option value="color-burn">Color Burn</option>
+                <option value="hard-light">Hard Light</option>
+                <option value="soft-light">Soft Light</option>
+                <option value="difference">Difference</option>
+                <option value="exclusion">Exclusion</option>
+                <option value="hue">Hue</option>
+                <option value="saturation">Saturation</option>
+                <option value="color">Color</option>
+                <option value="luminosity">Luminosity</option>
+              </select>
             </div>
-            <p>Blend Mode</p>
-            <select id="bg-blend-mode">
-              <option value="normal">Normal</option>
-              <option value="multiply">Multiply</option>
-              <option value="screen">Screen</option>
-              <option value="overlay">Overlay</option>
-              <option value="darken">Darken</option>
-              <option value="lighten">Lighten</option>
-              <option value="color-dodge">Color Dodge</option>
-              <option value="color-burn">Color Burn</option>
-              <option value="hard-light">Hard Light</option>
-              <option value="soft-light">Soft Light</option>
-              <option value="difference">Difference</option>
-              <option value="exclusion">Exclusion</option>
-              <option value="hue">Hue</option>
-              <option value="saturation">Saturation</option>
-              <option value="color">Color</option>
-              <option value="luminosity">Luminosity</option>
-            </select>
           </div>
 
           <div
@@ -372,107 +403,121 @@
             class="item-wrapper"
             item-name="clock"
           >
-            <div class="item">
-              <span>Show Clock</span>
-              <label class="switch">
-                <input
-                  type="checkbox"
-                  data-widget-toggle="clock-position-wrapper"
-                />
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="item">
-              <p>Style</p>
-              <div class="clock-style-wrapper">
-                <img
-                  src="/assets/image/clock_option/card_v1.svg"
-                  alt="Card"
-                  clock-name="clock-v1"
-                />
-                <img
-                  src="/assets/image/clock_option/analog_v1.svg"
-                  alt="Analog"
-                  clock-name="clock-v2"
-                />
-                <img
-                  src="/assets/image/clock_option/glow_v1.svg"
-                  alt="Glow"
-                  clock-name="clock-v3"
-                />
-                <img
-                  src="/assets/image/clock_option/stacked_v1.svg"
-                  alt="Stacked"
-                  clock-name="clock-v4"
-                />
-                <img
-                  src="/assets/image/clock_option/flip_v1.svg"
-                  alt="Flip"
-                  clock-name="clock-v5"
-                />
-                <img
-                  src="/assets/image/clock_option/words_v1.svg"
-                  alt="Words"
-                  clock-name="clock-v6"
-                />
-                <img
-                  src="/assets/image/clock_option/rings_v1.svg"
-                  alt="Rings"
-                  clock-name="clock-v7"
-                />
-                <img
-                  src="/assets/image/clock_option/lcd_v1.svg"
-                  alt="LCD"
-                  clock-name="clock-v8"
-                />
-                <img
-                  src="/assets/image/clock_option/reels_v1.svg"
-                  alt="Reels"
-                  clock-name="clock-v9"
-                />
-                <img
-                  src="/assets/image/clock_option/dayarc_v1.svg"
-                  alt="Day arc"
-                  clock-name="clock-v10"
-                />
-                <img
-                  src="/assets/image/clock_option/outline_v1.svg"
-                  alt="Outline"
-                  clock-name="clock-v11"
-                />
+            <ul class="sub-tabs">
+              <li class="active" sub-tab-btn="style">Style</li>
+              <li sub-tab-btn="other">Other settings</li>
+            </ul>
+
+            <div class="sub-pane active" sub-pane="style">
+              <div class="item">
+                <div class="clock-style-wrapper">
+                  <img
+                    src="/assets/image/clock_option/card_v1.svg"
+                    alt="Card"
+                    clock-name="clock-v1"
+                  />
+                  <img
+                    src="/assets/image/clock_option/analog_v1.svg"
+                    alt="Analog"
+                    clock-name="clock-v2"
+                  />
+                  <img
+                    src="/assets/image/clock_option/glow_v1.svg"
+                    alt="Glow"
+                    clock-name="clock-v3"
+                  />
+                  <img
+                    src="/assets/image/clock_option/stacked_v1.svg"
+                    alt="Stacked"
+                    clock-name="clock-v4"
+                  />
+                  <img
+                    src="/assets/image/clock_option/flip_v1.svg"
+                    alt="Flip"
+                    clock-name="clock-v5"
+                  />
+                  <img
+                    src="/assets/image/clock_option/words_v1.svg"
+                    alt="Words"
+                    clock-name="clock-v6"
+                  />
+                  <img
+                    src="/assets/image/clock_option/rings_v1.svg"
+                    alt="Rings"
+                    clock-name="clock-v7"
+                  />
+                  <img
+                    src="/assets/image/clock_option/lcd_v1.svg"
+                    alt="LCD"
+                    clock-name="clock-v8"
+                  />
+                  <img
+                    src="/assets/image/clock_option/reels_v1.svg"
+                    alt="Reels"
+                    clock-name="clock-v9"
+                  />
+                  <img
+                    src="/assets/image/clock_option/dayarc_v1.svg"
+                    alt="Day arc"
+                    clock-name="clock-v10"
+                  />
+                  <img
+                    src="/assets/image/clock_option/outline_v1.svg"
+                    alt="Outline"
+                    clock-name="clock-v11"
+                  />
+                  <img
+                    src="/assets/image/clock_option/dotmatrix_v1.svg"
+                    alt="Dot matrix"
+                    clock-name="clock-v14"
+                  />
+                </div>
               </div>
             </div>
-            <div class="item">
-              <p>Scale</p>
-              <div class="range-slider">
-                <input
-                  class="range-slider__range"
-                  type="range"
-                  value="1"
-                  min="0.2"
-                  max="3"
-                  step="0.05"
-                  id="clock-scale-slider"
-                />
-                <span class="range-slider__value">1</span>
+
+            <div class="sub-pane" sub-pane="other">
+              <div class="item">
+                <span>Show Clock</span>
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    data-widget-toggle="clock-position-wrapper"
+                  />
+                  <span class="slider"></span>
+                </label>
               </div>
+              <div class="item">
+                <p>Scale</p>
+                <div class="range-slider">
+                  <input
+                    class="range-slider__range"
+                    type="range"
+                    value="1"
+                    min="0.2"
+                    max="3"
+                    step="0.05"
+                    id="clock-scale-slider"
+                  />
+                  <span class="range-slider__value">1</span>
+                </div>
+              </div>
+              <div class="item">
+                <p>Text Color</p>
+                <input type="color" />
+                <input
+                  type="text"
+                  class="hex-input"
+                  placeholder="#FFFFFF"
+                  maxlength="7"
+                  spellcheck="false"
+                />
+              </div>
+              <div
+                class="item position"
+                content-id="clock-position-wrapper"
+                default-vertical="bottom"
+              ></div>
             </div>
-            <div class="item">
-              <p>Text Color</p>
-              <input type="color" />
-              <input
-                type="text"
-                class="hex-input"
-                placeholder="#FFFFFF"
-                maxlength="7"
-                spellcheck="false"
-              />
-            </div>
-            <div
-              class="item position"
-              content-id="clock-position-wrapper"
-              default-vertical="bottom"
-            ></div>
           </div>
 
           <div
@@ -910,8 +955,9 @@
                 />
               </div>
               <p class="settings-note">
-                Saves your clock, colours, positions, shortcuts and Google picks
-                to a file. Your background image or video is not included.
+                Saves your clock, colours, positions, shortcuts, Google picks
+                and any background video added by link to a file. An uploaded
+                background video is not included.
               </p>
               <span
                 id="backup-status"
@@ -935,6 +981,20 @@
                 spellcheck="false"
               />
             </div>
+          </div>
+
+          <div
+            id="preset-settings-wrapper"
+            class="item-wrapper"
+            item-name="preset"
+          >
+            <p>Apply a ready-made setup</p>
+            <div class="preset-gallery"></div>
+            <span
+              id="preset-status"
+              class="settings-status"
+              role="status"
+            ></span>
           </div>
           </div>
         </div>

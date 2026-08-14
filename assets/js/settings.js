@@ -521,6 +521,40 @@ settingTabIcons.forEach(icon => {
 })
 
 // ---------------------------
+// Pane sub-tabs — Background's Presets/Uploaded videos/Added links/Other
+// settings, Clock's Style/Other settings, and any pane that later outgrows a
+// single screen. Same active/hover pattern as the sidebar tabs above, scoped
+// per pane: each .item-wrapper carries its own independent .sub-tabs group,
+// found via closest() rather than a hardcoded pane id, so two panes with sub-
+// tabs never fight over which one is active.
+// ---------------------------
+const subTabButtons = document.querySelectorAll('#settings-sidebar .sub-tabs > li');
+
+subTabButtons.forEach(tab => {
+    makeActivatable(tab, 'tab');
+    tab.setAttribute('aria-selected', tab.classList.contains('active') ? 'true' : 'false');
+});
+
+subTabButtons.forEach(tab => {
+    tab.addEventListener('click', () => {
+        const group = tab.closest('.item-wrapper');
+        const preSelectedTab = group.querySelector('.sub-tabs > li.active');
+
+        if (tab === preSelectedTab) return;
+
+        preSelectedTab.classList.remove('active');
+        preSelectedTab.setAttribute('aria-selected', 'false');
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+
+        const paneName = tab.getAttribute('sub-tab-btn');
+        group.querySelectorAll('.sub-pane').forEach(pane => {
+            pane.classList.toggle('active', pane.getAttribute('sub-pane') === paneName);
+        });
+    });
+});
+
+// ---------------------------
 // Glass color picker
 // ---------------------------
 ;(function () {

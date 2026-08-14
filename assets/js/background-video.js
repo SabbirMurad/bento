@@ -2,24 +2,43 @@ const DB_NAME = "themeDB";
 const STORE_NAME = "videos";
 const VIDEO_KEY = "backgroundVideo";
 
-const preset_backgrounds = ['Tokyo Midnight Rain', 'Dark King and the Crown of Thorns'];
+// Presets are links, not shipped files — motionbgs.com serves them, so no
+// video ever sits in the package. Each is exactly what saveUrlVideo would have
+// stored had someone pasted the link in by hand.
+const preset_backgrounds = [
+    { name: 'Tokyo Midnight Rain', url: 'https://motionbgs.com/media/9963/tokyo-midnight-rain.1920x1080.mp4' },
+    { name: 'Divine General Mahoraga', url: 'https://motionbgs.com/media/7041/divine-general-mahoraga.1920x1080.mp4' },
+    { name: 'Spider-Man Marvel Rivals', url: 'https://motionbgs.com/media/7245/spider-man-marvel-rivals.1920x1080.mp4' },
+    { name: 'Dark King and the Crown of Thorns', url: 'https://motionbgs.com/media/9821/dark-king-and-the-crown-of-thorns.1920x1080.mp4' },
+    { name: 'Dark Queen', url: 'https://motionbgs.com/media/9230/dark-queen.1920x1080.mp4' },
+    { name: 'Celestial Veil', url: 'https://motionbgs.com/media/8626/celestial-veil.1920x1080.mp4' },
+    { name: 'Gabimaru Hollow Flame', url: 'https://motionbgs.com/media/9357/gabimaru-hollow-flame.1920x1080.mp4' },
+    { name: 'Ayanami Rei Beneath Blue Light', url: 'https://motionbgs.com/media/8773/ayanami-rei-beneath-blue-light.1920x1080.mp4' },
+    { name: 'Girl and Toyota AE86', url: 'https://motionbgs.com/media/9837/girl-and-toyota-ae86.1920x1080.mp4' },
+    { name: 'Luffy Meditation', url: 'https://motionbgs.com/media/8623/luffy-meditation.1920x1080.mp4' },
+    { name: 'Totoro on Top of a Tree', url: 'https://motionbgs.com/media/135/totoro-on-top-of-a-tree.1920x1080.mp4' },
+    { name: 'Confused Frieren', url: 'https://motionbgs.com/media/8868/confused-frieren.1920x1080.mp4' },
+    { name: 'Evelyn', url: 'https://motionbgs.com/media/9217/evelyn.1920x1080.mp4' },
+    { name: 'Sleeping Among Flowers', url: 'https://motionbgs.com/media/9851/sleeping-among-flowers.1920x1080.mp4' },
+    { name: 'Glitch Queen Awakens', url: 'https://motionbgs.com/media/8765/glitch-queen-awakens.1920x1080.mp4' },
+];
 
 // Which one a profile that has never chosen a background ends up on. Named
 // rather than "the first preset", because the store hands them back in key
-// order and dark-king sorts ahead of tokyo.
+// order and that is alphabetical over the preset ids, not the order they are
+// listed above.
 const DEFAULT_PRESET = 'Tokyo Midnight Rain';
 
 const presetId = name => `preset-${toDashCase(name)}`;
 
 // Bump when preset_backgrounds changes, or when anything about a stored preset
-// record does — the paths below are written into IndexedDB once and read back
-// forever after, so a thumbnail that changes extension without a bump is a 404
-// on every install that already ran. The flag this replaces was a boolean — it
-// could only say that presets had been put in at some point, so a profile that
-// had already run kept the ones it got the first time and never saw a change to
-// the list. Anyone who ran the old build is still holding three presets whose
-// files no longer ship.
-const PRESETS_VERSION = 3;
+// record does — the records below are written into IndexedDB once and read
+// back forever after, so a link that changes extension without a bump is a
+// dead preset on every install that already ran. The flag this replaces was a
+// boolean — it could only say that presets had been put in at some point, so a
+// profile that had already run kept the ones it got the first time and never
+// saw a change to the list.
+const PRESETS_VERSION = 4;
 const videoInput = document.querySelector("#settings-sidebar .video-selector #videoInput")
 
 // Open DB
@@ -274,7 +293,7 @@ async function syncPresetVideos() {
     );
     if (version === PRESETS_VERSION) return;
 
-    const wanted = new Map(preset_backgrounds.map(name => [presetId(name), name]));
+    const wanted = new Map(preset_backgrounds.map(preset => [presetId(preset.name), preset]));
 
     // Read in its own transaction and finish before opening the write one. An
     // await inside a live transaction is how you get TransactionInactiveError.
@@ -288,13 +307,16 @@ async function syncPresetVideos() {
 
     stale.forEach(id => store.delete(id));
 
-    wanted.forEach((name, id) => {
+    wanted.forEach(({ name, url }, id) => {
         store.put({
             id,
             type: "preset",
             name,
-            videoSrc: `assets/video/${toDashCase(name)}.mp4`,
-            thumbnail: `assets/video/${toDashCase(name)}.webp`
+            videoSrc: url,
+            // No local still to point at — see generateVideoThumbnail. The
+            // gallery draws these from the video itself, same as a video added
+            // by URL.
+            thumbnail: null
         });
     });
 
@@ -330,8 +352,15 @@ async function loadAllVideos() {
 // appending on top of the newer one.
 let galleryRenderToken = 0;
 
+// One gallery per video type — Presets, Uploaded videos and Added links each
+// get their own tab and their own tile grid, so a video only ever needs
+// filtering by which .available-videos it belongs in, not by anything drawn
+// into the tile itself.
+function galleryWrapperFor(type) {
+    return document.querySelector(`.available-videos[data-video-type="${type}"]`);
+}
+
 async function renderVideoGallery() {
-    const wrapper = document.querySelector('.available-videos');
     const token = ++galleryRenderToken;
 
     const videos = await loadAllVideos();
@@ -339,7 +368,11 @@ async function renderVideoGallery() {
 
     if (token !== galleryRenderToken) return;
 
-    const fragment = document.createDocumentFragment();
+    const fragments = {
+        preset: document.createDocumentFragment(),
+        user: document.createDocumentFragment(),
+        url: document.createDocumentFragment(),
+    };
 
     videos.forEach(video => {
         const item = document.createElement("div");
@@ -349,12 +382,13 @@ async function renderVideoGallery() {
 
         if (isSelected) item.classList.add('selected');
 
-        // A video added by URL has no stored still — none can be taken across
-        // origins — so it shows the opening of the video itself. Muted, never
-        // played, and asked only for metadata: enough to seek to the first
-        // second and hold that frame, which costs a range request rather than
-        // the download a poster would have needed.
-        const fromVideo = video.type === "url";
+        // A video with no stored still — added by URL, or a preset that is
+        // itself just a URL — shows the opening of the video itself instead.
+        // None can be taken across origins. Muted, never played, and asked
+        // only for metadata: enough to seek to the first second and hold that
+        // frame, which costs a range request rather than the download a
+        // poster would have needed.
+        const fromVideo = !video.thumbnail;
 
         item.innerHTML = `
             <div class="bg-wrapper">
@@ -399,10 +433,20 @@ async function renderVideoGallery() {
         }
 
         item.onclick = () => selectVideo(video);
-        fragment.appendChild(item);
+
+        // Guards a type this build does not know about rather than throwing
+        // and abandoning every video still left in the loop — the only way to
+        // reach here is a record written by some other version of the
+        // extension, never something saveUserVideo, saveUrlVideo or
+        // syncPresetVideos wrote themselves.
+        const bucket = fragments[video.type];
+        if (bucket) bucket.appendChild(item);
     });
 
-    wrapper.replaceChildren(fragment);
+    Object.entries(fragments).forEach(([type, fragment]) => {
+        const wrapper = galleryWrapperFor(type);
+        if (wrapper) wrapper.replaceChildren(fragment);
+    });
 }
 
 async function setSelectedVideo(id) {

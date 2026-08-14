@@ -2,9 +2,10 @@
 //
 // State is spread across three stores: settings in localStorage, shortcuts and
 // bookmark order in chrome.storage.sync, and the background image or video in
-// IndexedDB. A backup reaches the first two. The background media is left out
-// on purpose — a video would turn a small settings file into a large one, and
-// the point of this is to be easy to keep somewhere safe.
+// IndexedDB. A backup reaches the first two, plus the part of the third that is
+// cheap to carry: a video added by URL is just a link, so it travels with the
+// rest. An uploaded video is the file itself — that would turn a small settings
+// file into a large one, so those are left out on purpose.
 
 const BACKUP_FORMAT = 'bento-backup';
 const BACKUP_VERSION = 1;
@@ -43,12 +44,27 @@ async function buildBackup() {
         delete synced[SETTINGS_SYNC_KEY];
     }
 
+    // Only videos added by URL — an upload is a file sitting in IndexedDB, not
+    // something a JSON backup should be carrying around.
+    const allVideos = await loadAllVideos();
+    const videos = allVideos
+        .filter(video => video.type === 'url')
+        .map(({ id, type, name, videoSrc, createdAt }) => ({ id, type, name, videoSrc, createdAt }));
+
+    // Recorded even when it points at a preset or an upload that will not come
+    // along for the ride — restoreBackup only acts on it when it resolves to
+    // something that exists after import, and otherwise startup falls back the
+    // same way it does for any selection that no longer resolves.
+    const selectedVideoId = await getSelectedVideoId();
+
     return {
         format: BACKUP_FORMAT,
         version: BACKUP_VERSION,
         exportedAt: new Date().toISOString(),
         settings,
         synced,
+        videos,
+        selectedVideoId,
     };
 }
 
@@ -74,6 +90,35 @@ async function restoreBackup(backup) {
 
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync && backup.synced) {
         await chrome.storage.sync.set(backup.synced);
+    }
+
+    if (Array.isArray(backup.videos) && backup.videos.length) {
+        const db = await openDB();
+        const tx = db.transaction('videos', 'readwrite');
+        const store = tx.objectStore('videos');
+
+        backup.videos.forEach(video => {
+            // Only ever put back what we could have put in: a URL video,
+            // shaped the way saveUrlVideo shapes one. Anything else in this
+            // list did not come from us.
+            if (!video || video.type !== 'url') return;
+            if (typeof video.id !== 'string' || typeof video.videoSrc !== 'string') return;
+
+            store.put({
+                id: video.id,
+                type: 'url',
+                name: video.name || video.videoSrc,
+                videoSrc: video.videoSrc,
+                thumbnail: null,
+                createdAt: video.createdAt,
+            });
+        });
+
+        await idbDone(tx);
+    }
+
+    if (backup.selectedVideoId) {
+        await setSelectedVideo(backup.selectedVideoId);
     }
 
     // Publish before reloading. Otherwise the next load pulls whatever is in
@@ -119,3 +164,86 @@ importSettingsFile.addEventListener('change', async () => {
         importSettingsFile.value = '';
     }
 });
+
+// ---------------------------
+// Built-in presets
+// ---------------------------
+// Each one is a backup file shipped with the extension rather than typed in —
+// same format restoreBackup already knows how to read, so applying one is
+// that function pointed at a bundled file instead of a picked one.
+const PRESET_FILES = [
+    'assets/presets/preset_1.json',
+    'assets/presets/preset_2.json',
+    'assets/presets/preset_3.json',
+    'assets/presets/preset_4.json',
+    'assets/presets/preset_5.json',
+];
+
+const presetGallery = document.querySelector('.preset-gallery');
+const presetStatus = document.getElementById('preset-status');
+
+let presetStatusTimer;
+
+function showPresetStatus(message, isError = false) {
+    presetStatus.textContent = message;
+    presetStatus.classList.toggle('error', isError);
+
+    clearTimeout(presetStatusTimer);
+    presetStatusTimer = setTimeout(() => {
+        presetStatus.textContent = '';
+        presetStatus.classList.remove('error');
+    }, 6000);
+}
+
+// Guards against a second tile being clicked mid-apply — restoreBackup clears
+// localStorage partway through, so overlapping runs would race each other
+// there rather than simply queueing.
+let applyingPreset = false;
+
+async function applyPreset(file, name) {
+    if (applyingPreset) return;
+    applyingPreset = true;
+    showPresetStatus(`Applying ${name}…`);
+
+    try {
+        const response = await fetch(file);
+        if (!response.ok) throw new Error(`${file} is missing from this build.`);
+
+        const backup = await response.json();
+        await restoreBackup(backup);
+
+        showPresetStatus(`${name} applied. Reloading…`);
+        setTimeout(() => location.reload(), 400);
+    } catch (error) {
+        showPresetStatus(`Could not apply ${name}: ${error.message}`, true);
+        applyingPreset = false;
+    }
+}
+
+function renderPresetGallery() {
+    const fragment = document.createDocumentFragment();
+
+    PRESET_FILES.forEach((file, index) => {
+        const name = `Preset ${index + 1}`;
+
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.innerHTML = `
+            <div class="bg-wrapper">
+              <div class="thumbnail"></div>
+            </div>
+            <p></p>
+        `;
+        // No thumbnail image yet — see the .thumbnail placeholder in
+        // settings.css. Set rather than interpolated, same reasoning as the
+        // video gallery: nothing user-authored belongs pasted into markup.
+        item.querySelector('p').textContent = name;
+        item.onclick = () => applyPreset(file, name);
+
+        fragment.appendChild(item);
+    });
+
+    presetGallery.replaceChildren(fragment);
+}
+
+if (presetGallery) renderPresetGallery();

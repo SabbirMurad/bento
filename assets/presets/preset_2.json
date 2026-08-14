@@ -1,0 +1,28 @@
+{
+  "format": "bento-backup",
+  "version": 1,
+  "exportedAt": "2026-08-14T19:43:59.068Z",
+  "settings": {
+    "shortcuts-wrapper-position": "{\"horizontal\":\"horizontal-center\",\"vertical\":\"bottom\",\"left\":\"unset\",\"right\":\"unset\",\"top\":\"unset\",\"bottom\":\"174px\",\"leftVal\":\"\",\"rightVal\":\"\",\"topVal\":\"\",\"bottomVal\":\"174\"}",
+    "clock-scale": "1",
+    "shortcuts-layout": "horizontal",
+    "clock-position-wrapper-position": "{\"horizontal\":\"horizontal-center\",\"vertical\":\"top\",\"left\":\"unset\",\"right\":\"unset\",\"top\":\"74px\",\"bottom\":\"unset\",\"leftVal\":\"\",\"rightVal\":\"\",\"topVal\":\"74\",\"bottomVal\":\"\"}",
+    "widget-visible:console-btn": "true",
+    "search-wrapper-position": "{\"horizontal\":\"horizontal-center\",\"vertical\":\"bottom\",\"left\":\"unset\",\"right\":\"unset\",\"top\":\"unset\",\"bottom\":\"232px\",\"leftVal\":\"\",\"rightVal\":\"\",\"topVal\":\"\",\"bottomVal\":\"232\"}",
+    "clock-style": "clock-v7",
+    "glass-color": "#ffffff",
+    "general-text-color": "#ffffff",
+    "widget-visible:settings-btn": "true"
+  },
+  "synced": {
+    "shortcuts": [
+      "https://youtube.com",
+      "https://github.com",
+      "https://instagram.com",
+      "https://sabbirhassan.com",
+      "https://facebook.com"
+    ]
+  },
+  "videos": [],
+  "selectedVideoId": "preset-confused-frieren"
+}

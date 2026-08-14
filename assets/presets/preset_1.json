@@ -1,0 +1,25 @@
+{
+  "format": "bento-backup",
+  "version": 1,
+  "exportedAt": "2026-08-14T19:35:29.358Z",
+  "settings": {
+    "shortcuts-wrapper-position": "{\"horizontal\":\"left\",\"vertical\":\"vertical-center\",\"left\":\"25px\",\"right\":\"unset\",\"top\":\"unset\",\"bottom\":\"unset\",\"leftVal\":\"25\",\"rightVal\":\"\",\"topVal\":\"\",\"bottomVal\":\"\"}",
+    "shortcuts-layout": "vertical",
+    "clock-position-wrapper-position": "{\"horizontal\":\"horizontal-center\",\"vertical\":\"top\",\"left\":\"unset\",\"right\":\"unset\",\"top\":\"82px\",\"bottom\":\"unset\",\"leftVal\":\"\",\"rightVal\":\"\",\"topVal\":\"82\",\"bottomVal\":\"\"}",
+    "widget-visible:console-btn": "true",
+    "search-wrapper-position": "{\"horizontal\":\"horizontal-center\",\"vertical\":\"bottom\",\"left\":\"unset\",\"right\":\"unset\",\"top\":\"unset\",\"bottom\":\"47px\",\"leftVal\":\"\",\"rightVal\":\"\",\"topVal\":\"\",\"bottomVal\":\"47\"}",
+    "clock-style": "clock-v10",
+    "widget-visible:settings-btn": "true"
+  },
+  "synced": {
+    "shortcuts": [
+      "https://youtube.com",
+      "https://github.com",
+      "https://instagram.com",
+      "https://sabbirhassan.com",
+      "https://facebook.com"
+    ]
+  },
+  "videos": [],
+  "selectedVideoId": "185bc91a-9de8-4e7a-b3b5-181b28b452d4"
+}

@@ -885,6 +885,67 @@
   color: var(--clock-ink-70);
 }
 
+/* ---------------------------------------------------------------
+   v14 — Dot matrix. Digits drawn the way an LED sign draws them: a
+   5x7 grid of dots per character, most of them left dark.
+   --------------------------------------------------------------- */
+#dotmatrix-clock-wrapper {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  cursor: default;
+  color: var(--clock-text-color);
+}
+
+#dotmatrix-clock-wrapper .dm-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#dotmatrix-clock-wrapper .dm-char {
+  display: grid;
+  grid-template-columns: repeat(var(--dm-cols, 5), 9px);
+  grid-template-rows: repeat(7, 9px);
+  gap: 3px;
+}
+
+#dotmatrix-clock-wrapper .dm-colon {
+  align-self: center;
+}
+
+#dotmatrix-clock-wrapper .dm-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--clock-text-color);
+  opacity: 0.08;
+  transition: opacity 0.15s ease;
+}
+
+#dotmatrix-clock-wrapper .dm-dot.lit {
+  opacity: 1;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--clock-text-color) 55%, transparent);
+}
+
+#dotmatrix-clock-wrapper .dm-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--clock-ink-70);
+}
+
+#dotmatrix-clock-wrapper .dm-foot .rule {
+  width: 18px;
+  height: 1px;
+  background: var(--clock-ink-45);
+}
+
 @media (prefers-reduced-motion: reduce) {
   #flip-clock-wrapper .flip-digit.flipping .leaf-front,
   #flip-clock-wrapper .flip-digit.flipping .leaf-back {

@@ -536,6 +536,116 @@ input[type="color"]::-webkit-color-swatch {
   background: rgba(255, 80, 80, 0.06);
 }
 
+/* Built-in preset gallery — one click applies a whole look. Tile layout
+   mirrors #settings-sidebar .available-videos below; the difference is the
+   thumbnail itself, which has nothing to draw yet. */
+#settings-sidebar .preset-gallery {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+#settings-sidebar .preset-gallery .item {
+  width: 174px;
+  cursor: pointer;
+}
+
+#settings-sidebar .preset-gallery .item .bg-wrapper {
+  width: 100%;
+  height: 104px;
+}
+
+/* Stands in for a real preview until each preset ships a thumbnail — a bare
+   bordered box rather than nothing, so the tile isn't just a blank hole. */
+#settings-sidebar .preset-gallery .item .thumbnail {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+#settings-sidebar .preset-gallery .item:hover .thumbnail {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(26, 188, 156, 0.5);
+}
+
+#settings-sidebar .preset-gallery .item p {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 100%;
+  overflow: hidden;
+  text-align: start;
+}
+
+/* Sub-navigation inside a pane — Background's Presets/Uploaded/Links/Other,
+   Clock's Style/Other, and anything else that outgrows a single pane later.
+   A smaller echo of #settings-sidebar .tabs — same active/hover language,
+   laid out as a row instead of a rail since there is no room for a second
+   sidebar inside a pane. */
+#settings-sidebar .sub-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#settings-sidebar .sub-tabs > li {
+  list-style: none;
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+#settings-sidebar .sub-tabs > li:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+}
+
+#settings-sidebar .sub-tabs > li.active {
+  background: rgba(26, 188, 156, 0.14);
+  color: #1abc9c;
+  font-weight: 600;
+}
+
+#settings-sidebar .sub-tabs > li:focus-visible {
+  outline: 2px solid rgba(26, 188, 156, 0.65);
+  outline-offset: -2px;
+}
+
+/* Panes swap the same way #settings-sidebar .item-wrapper does: only the
+   active one is display:flex, the rest are display:none and out of the way
+   entirely rather than just hidden, so gap on the item-wrapper above never
+   counts them. */
+#settings-sidebar .sub-pane {
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#settings-sidebar .sub-pane.active {
+  display: flex;
+}
+
 #settings-sidebar .video-selector {
   border-radius: 6px;
   width: 148px;
