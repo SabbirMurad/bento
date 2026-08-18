@@ -99,7 +99,12 @@ function normalizeHex(val) {
 let textColorPickers = document.querySelectorAll('#settings-sidebar-overlay .item-wrapper input[type="color"]');
 
 for (let colorPicker of textColorPickers) {
-    let itemName = colorPicker.parentElement.parentElement.getAttribute('item-name');
+    // Whichever pane the picker is in, however deep. This counted two parents
+    // up until the Clock pane grew sub-tabs and put a div between the .item and
+    // the wrapper: the name came back null, the picker wrote --null-text-color,
+    // and the clock colour silently stopped changing. Nothing here should care
+    // how the panes are laid out.
+    let itemName = colorPicker.closest('[item-name]').getAttribute('item-name');
     let hexInput = colorPicker.parentElement.querySelector('.hex-input');
 
     let savedTextColor = localStorage.getItem(itemName + '-text-color');
