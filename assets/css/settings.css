@@ -556,22 +556,22 @@ input[type="color"]::-webkit-color-swatch {
   height: 104px;
 }
 
-/* Stands in for a real preview until each preset ships a thumbnail — a bare
-   bordered box rather than nothing, so the tile isn't just a blank hole. */
+/* A screenshot of the setup the preset produces. The tint underneath is what
+   shows while it decodes — these load lazily, so there is a moment before the
+   first paint where the tile would otherwise be a blank hole. */
 #settings-sidebar .preset-gallery .item .thumbnail {
+  display: block;
   width: 100%;
   height: 100%;
   border-radius: 8px;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
+  object-fit: cover;
   box-sizing: border-box;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
 #settings-sidebar .preset-gallery .item:hover .thumbnail {
-  background: rgba(255, 255, 255, 0.08);
   border-color: rgba(26, 188, 156, 0.5);
 }
 

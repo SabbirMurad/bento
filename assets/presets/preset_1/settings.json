@@ -1,0 +1,124 @@
+{
+  "format": "bento-backup",
+  "version": 1,
+  "exportedAt": "2026-08-18T05:00:03.196Z",
+  "settings": {
+    "shortcuts-wrapper-position": "{\"horizontal\":\"right\",\"vertical\":\"bottom\",\"left\":\"unset\",\"right\":\"642px\",\"top\":\"unset\",\"bottom\":\"176px\",\"leftVal\":\"\",\"rightVal\":\"642\",\"topVal\":\"\",\"bottomVal\":\"176\"}",
+    "widget-visible:quote-wrapper": "false",
+    "console-github-user": "sabbirmurad",
+    "search-width": "627",
+    "bg-shadow": "0",
+    "shortcuts-icon-card": "off",
+    "widget-visible:search-wrapper": "true",
+    "clock-position-wrapper-position": "{\"horizontal\":\"left\",\"vertical\":\"top\",\"left\":\"645px\",\"right\":\"unset\",\"top\":\"177px\",\"bottom\":\"unset\",\"leftVal\":\"645\",\"rightVal\":\"\",\"topVal\":\"177\",\"bottomVal\":\"\"}",
+    "widget-visible:google-wrapper": "true",
+    "bg-blend-mode": "normal",
+    "widget-visible:bookmark-container": "true",
+    "quote-font-size": "32",
+    "quote-max-width": "680",
+    "google-items": "[{\"id\":\"search\",\"on\":false},{\"id\":\"gmail\",\"on\":true},{\"id\":\"drive\",\"on\":true},{\"id\":\"docs\",\"on\":true},{\"id\":\"sheets\",\"on\":true},{\"id\":\"slides\",\"on\":false},{\"id\":\"forms\",\"on\":true},{\"id\":\"calendar\",\"on\":false},{\"id\":\"keep\",\"on\":false},{\"id\":\"tasks\",\"on\":false},{\"id\":\"contacts\",\"on\":false},{\"id\":\"meet\",\"on\":false},{\"id\":\"chat\",\"on\":false},{\"id\":\"groups\",\"on\":false},{\"id\":\"photos\",\"on\":false},{\"id\":\"maps\",\"on\":false},{\"id\":\"youtube\",\"on\":false},{\"id\":\"youtube-music\",\"on\":false},{\"id\":\"news\",\"on\":false},{\"id\":\"translate\",\"on\":false},{\"id\":\"books\",\"on\":false},{\"id\":\"scholar\",\"on\":false},{\"id\":\"earth\",\"on\":false},{\"id\":\"play-store\",\"on\":false},{\"id\":\"gemini\",\"on\":false},{\"id\":\"ai-studio\",\"on\":false},{\"id\":\"notebooklm\",\"on\":false},{\"id\":\"colab\",\"on\":false},{\"id\":\"cloud\",\"on\":false},{\"id\":\"firebase\",\"on\":true},{\"id\":\"play-console\",\"on\":true},{\"id\":\"apps-script\",\"on\":false},{\"id\":\"analytics\",\"on\":true},{\"id\":\"search-console\",\"on\":false},{\"id\":\"ads\",\"on\":false},{\"id\":\"adsense\",\"on\":false},{\"id\":\"admob\",\"on\":false},{\"id\":\"classroom\",\"on\":false},{\"id\":\"sites\",\"on\":false},{\"id\":\"blogger\",\"on\":false},{\"id\":\"trends\",\"on\":false},{\"id\":\"alerts\",\"on\":false},{\"id\":\"finance\",\"on\":false},{\"id\":\"travel\",\"on\":false},{\"id\":\"shopping\",\"on\":false},{\"id\":\"voice\",\"on\":false},{\"id\":\"one\",\"on\":false},{\"id\":\"account\",\"on\":false},{\"id\":\"passwords\",\"on\":false},{\"id\":\"takeout\",\"on\":false}]",
+    "shortcuts-gap": "21",
+    "bg-blur": "0",
+    "clock-style": "clock-v4",
+    "console-btn-position": "{\"horizontal\":\"right\",\"vertical\":\"bottom\",\"left\":\"unset\",\"right\":\"13px\",\"top\":\"unset\",\"bottom\":\"82px\",\"leftVal\":\"\",\"rightVal\":\"13\",\"topVal\":\"\",\"bottomVal\":\"82\"}",
+    "quote-font-weight": "400",
+    "shortcuts-icon-mono": "on",
+    "quote-wrapper-position": "{\"horizontal\":\"horizontal-center\",\"vertical\":\"top\",\"left\":\"unset\",\"right\":\"unset\",\"top\":\"369px\",\"bottom\":\"unset\",\"leftVal\":\"\",\"rightVal\":\"\",\"topVal\":\"369\",\"bottomVal\":\"\"}",
+    "general-text-color": "#4f4f4f",
+    "clock-scale": "0.9",
+    "quote-font-family": "'Courier New', Courier, monospace",
+    "quote-text": "Dont't try to calm the storm. The storm will pass, calm yourself.",
+    "shortcuts-layout": "vertical",
+    "widget-visible:console-btn": "true",
+    "search-wrapper-position": "{\"horizontal\":\"horizontal-center\",\"vertical\":\"bottom\",\"left\":\"unset\",\"right\":\"unset\",\"top\":\"unset\",\"bottom\":\"82px\",\"leftVal\":\"\",\"rightVal\":\"\",\"topVal\":\"\",\"bottomVal\":\"82\"}",
+    "null-text-color": "#000000",
+    "glass-color": "#4f4f4f",
+    "clock-text-color": "#000000",
+    "widget-visible:clock-position-wrapper": "true",
+    "widget-visible:settings-btn": "true"
+  },
+  "synced": {
+    "bm_order_109": [
+      "111",
+      "110",
+      "112"
+    ],
+    "bm_order_2": [
+      "89",
+      "92",
+      "91",
+      "93",
+      "115",
+      "119",
+      "120",
+      "122",
+      "123",
+      "125",
+      "128",
+      "129",
+      "132"
+    ],
+    "bm_order_24": [
+      "25",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "42"
+    ],
+    "bm_order_7": [
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13"
+    ],
+    "bm_order_71": [
+      "73",
+      "72",
+      "74",
+      "75",
+      "108",
+      "105",
+      "106"
+    ],
+    "bm_order_78": [
+      "80",
+      "82",
+      "81",
+      "84",
+      "98",
+      "102"
+    ],
+    "shortcuts": [
+      "https://youtube.com",
+      "https://github.com",
+      "https://facebook.com",
+      "https://claude.ai",
+      "https://chatgpt.com",
+      "https://sabbirhassan.com"
+    ]
+  },
+  "videos": [
+    {
+      "id": "e020c603-27ee-483b-8344-3a6b16c093cd",
+      "type": "url",
+      "name": "celestial-veil.1920x1080.mp4",
+      "videoSrc": "https://motionbgs.com/media/8626/celestial-veil.1920x1080.mp4",
+      "createdAt": 1786711493860
+    }
+  ],
+  "selectedVideoId": "preset-monochrome-daydreams"
+}

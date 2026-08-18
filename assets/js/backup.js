@@ -168,15 +168,21 @@ importSettingsFile.addEventListener('change', async () => {
 // ---------------------------
 // Built-in presets
 // ---------------------------
-// Each one is a backup file shipped with the extension rather than typed in —
-// same format restoreBackup already knows how to read, so applying one is
-// that function pointed at a bundled file instead of a picked one.
-const PRESET_FILES = [
-    'assets/presets/preset_1.json',
-    'assets/presets/preset_2.json',
-    'assets/presets/preset_3.json',
-    'assets/presets/preset_4.json',
-    'assets/presets/preset_5.json',
+// Each one is a folder shipped with the extension rather than typed in: a
+// backup file in the same format restoreBackup already knows how to read, so
+// applying one is that function pointed at a bundled file instead of a picked
+// one, plus a screenshot of the setup it produces.
+//
+// Both paths are spelled out rather than built from a folder name. The
+// packager can only check a reference it sees as a complete literal, so a
+// path assembled at runtime would ship unverified — and a preset that 404s
+// only once installed is exactly what that check exists to catch.
+const PRESETS = [
+    { settings: 'assets/presets/preset_1/settings.json', thumbnail: 'assets/presets/preset_1/thumbnail.webp' },
+    { settings: 'assets/presets/preset_2/settings.json', thumbnail: 'assets/presets/preset_2/thumbnail.webp' },
+    { settings: 'assets/presets/preset_3/settings.json', thumbnail: 'assets/presets/preset_3/thumbnail.webp' },
+    { settings: 'assets/presets/preset_4/settings.json', thumbnail: 'assets/presets/preset_4/thumbnail.webp' },
+    { settings: 'assets/presets/preset_5/settings.json', thumbnail: 'assets/presets/preset_5/thumbnail.webp' },
 ];
 
 const presetGallery = document.querySelector('.preset-gallery');
@@ -223,22 +229,25 @@ async function applyPreset(file, name) {
 function renderPresetGallery() {
     const fragment = document.createDocumentFragment();
 
-    PRESET_FILES.forEach((file, index) => {
+    PRESETS.forEach((preset, index) => {
         const name = `Preset ${index + 1}`;
 
         const item = document.createElement('div');
         item.className = 'item';
+        // Lazy because the Presets pane starts hidden and these are full-size
+        // screenshots — nothing should be decoding five of them for a tab
+        // nobody has opened.
         item.innerHTML = `
             <div class="bg-wrapper">
-              <div class="thumbnail"></div>
+              <img class="thumbnail" alt="" loading="lazy" decoding="async">
             </div>
             <p></p>
         `;
-        // No thumbnail image yet — see the .thumbnail placeholder in
-        // settings.css. Set rather than interpolated, same reasoning as the
-        // video gallery: nothing user-authored belongs pasted into markup.
+        // Set rather than interpolated, same reasoning as the video gallery:
+        // nothing belongs pasted into markup that does not have to be.
+        item.querySelector('.thumbnail').src = preset.thumbnail;
         item.querySelector('p').textContent = name;
-        item.onclick = () => applyPreset(file, name);
+        item.onclick = () => applyPreset(preset.settings, name);
 
         fragment.appendChild(item);
     });

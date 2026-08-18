@@ -1,7 +1,7 @@
 {
   "format": "bento-backup",
   "version": 1,
-  "exportedAt": "2026-08-14T19:35:59.671Z",
+  "exportedAt": "2026-08-18T05:05:01.634Z",
   "settings": {
     "shortcuts-wrapper-position": "{\"horizontal\":\"left\",\"vertical\":\"vertical-center\",\"left\":\"25px\",\"right\":\"unset\",\"top\":\"unset\",\"bottom\":\"unset\",\"leftVal\":\"25\",\"rightVal\":\"\",\"topVal\":\"\",\"bottomVal\":\"\"}",
     "shortcuts-layout": "vertical",
@@ -12,6 +12,70 @@
     "widget-visible:settings-btn": "true"
   },
   "synced": {
+    "bm_order_109": [
+      "111",
+      "110",
+      "112"
+    ],
+    "bm_order_2": [
+      "89",
+      "92",
+      "91",
+      "93",
+      "115",
+      "119",
+      "120",
+      "122",
+      "123",
+      "125",
+      "128",
+      "129",
+      "132"
+    ],
+    "bm_order_24": [
+      "25",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "42"
+    ],
+    "bm_order_7": [
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13"
+    ],
+    "bm_order_71": [
+      "73",
+      "72",
+      "74",
+      "75",
+      "108",
+      "105",
+      "106"
+    ],
+    "bm_order_78": [
+      "80",
+      "82",
+      "81",
+      "84",
+      "98",
+      "102"
+    ],
     "shortcuts": [
       "https://youtube.com",
       "https://github.com",
@@ -20,6 +84,14 @@
       "https://facebook.com"
     ]
   },
-  "videos": [],
-  "selectedVideoId": "519641fd-d786-43ee-944c-4c09b4053b49"
+  "videos": [
+    {
+      "id": "e020c603-27ee-483b-8344-3a6b16c093cd",
+      "type": "url",
+      "name": "celestial-veil.1920x1080.mp4",
+      "videoSrc": "https://motionbgs.com/media/8626/celestial-veil.1920x1080.mp4",
+      "createdAt": 1786711493860
+    }
+  ],
+  "selectedVideoId": "preset-tokyo-midnight-rain"
 }
