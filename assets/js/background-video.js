@@ -247,6 +247,11 @@ async function deleteVideo(id) {
     tx.objectStore("videos").delete(id);
     await idbDone(tx);
 
+    // The tile for a record that no longer exists, taken out on its own. A
+    // re-render would tear down every other tile with it and start their
+    // metadata fetches over, which is a great deal of network for one removal.
+    document.querySelector(`.available-videos .item[data-video-id="${CSS.escape(id)}"]`)?.remove();
+
     // Whatever was showing has just stopped existing, so fall back the same
     // way startup does when nothing has been chosen yet.
     if (await getSelectedVideoId() === id) {
@@ -262,9 +267,8 @@ async function deleteVideo(id) {
 
         document.getElementById("bg-video").removeAttribute("src");
         await setSelectedVideo(null);
+        markSelectedTile(null);
     }
-
-    renderVideoGallery();
 }
 
 // Awaiting this used to tell you nothing: the function handed back a resolved
@@ -362,7 +366,22 @@ function galleryWrapperFor(type) {
     return document.querySelector(`.available-videos[data-video-type="${type}"]`);
 }
 
+// Nothing draws until the Background tab has been opened once.
+//
+// Every tile without a stored still is a <video preload="metadata"> pointed at
+// whatever host the video lives on, and it seeks a second in to hold a frame —
+// two range requests and a decode apiece. Drawing the presets at startup meant
+// every new tab paid all of that for a panel that was not on screen, competing
+// with the one background actually playing.
+//
+// A flag checked here rather than an early return at each call site:
+// selectVideo, deleteVideo and the URL form all re-draw to keep the tiles in
+// sync, and none of them should be the thing that opens the floodgates.
+let galleryOpened = false;
+
 async function renderVideoGallery() {
+    if (!galleryOpened) return;
+
     const token = ++galleryRenderToken;
 
     const videos = await loadAllVideos();
@@ -378,11 +397,10 @@ async function renderVideoGallery() {
 
     videos.forEach(video => {
         const item = document.createElement("div");
-        item.className = `item ${video.id === selectedId ? "active" : ""}`;
-
-        const isSelected = video.id === selectedId;
-
-        if (isSelected) item.classList.add('selected');
+        item.className = "item";
+        // What markSelectedTile matches on, so choosing a background can move
+        // the highlight instead of rebuilding the grid.
+        item.dataset.videoId = video.id;
 
         // A video with no stored still — added by URL, or a preset that is
         // itself just a URL — shows the opening of the video itself instead.
@@ -449,7 +467,36 @@ async function renderVideoGallery() {
         const wrapper = galleryWrapperFor(type);
         if (wrapper) wrapper.replaceChildren(fragment);
     });
+
+    markSelectedTile(selectedId);
 }
+
+// Moves the highlight, and nothing else.
+//
+// selectVideo used to re-render the whole gallery for this. replaceChildren
+// throws away every tile and builds new ones, so picking a background tore
+// down seventeen <video> elements and started seventeen fresh metadata fetches
+// and seeks — for a change that only ever moves one class between two tiles.
+function markSelectedTile(id) {
+    document.querySelectorAll('.available-videos .item').forEach(item => {
+        const isSelected = item.dataset.videoId === id;
+        item.classList.toggle('active', isSelected);
+        item.classList.toggle('selected', isSelected);
+    });
+}
+
+// First time the Background tab is shown. Later opens fall straight through:
+// the gallery is already drawn and every path that changes a video keeps it
+// current from there. Keyboard activation goes through control.click() in
+// settings.js, so one click listener covers both.
+function openVideoGallery() {
+    if (galleryOpened) return;
+    galleryOpened = true;
+    renderVideoGallery();
+}
+
+document.querySelector('#settings-sidebar .tabs li[setting-btn="background"]')
+    ?.addEventListener('click', openVideoGallery);
 
 async function setSelectedVideo(id) {
     const db = await openDB();
@@ -475,7 +522,7 @@ async function selectVideo(video) {
             : video.videoSrc;
 
     await setSelectedVideo(video.id);
-    renderVideoGallery();
+    markSelectedTile(video.id);
 }
 
 videoInput.addEventListener("change", async e => {
@@ -484,6 +531,9 @@ videoInput.addEventListener("change", async e => {
 
     const video = await saveUserVideo(file);
     await selectVideo(video);
+    // selectVideo only moves the highlight now, and this is a video the
+    // gallery has never drawn.
+    await renderVideoGallery();
 });
 
 // ---------------------------
@@ -510,6 +560,9 @@ async function addVideoByUrl() {
     try {
         const video = await saveUrlVideo(url);
         await selectVideo(video);
+        // New record, so the grid really does need drawing again — unlike a
+        // plain change of selection, which markSelectedTile handles.
+        await renderVideoGallery();
 
         videoUrlInput.value = "";
         setVideoUrlStatus(`Added ${video.name}.`);
@@ -566,9 +619,10 @@ backgroundVideo.addEventListener("play", () => {
 });
 
 // One sequence rather than two that raced: the presets have to be in the store
-// before anything can look for a video to play, and both of those have to be
-// settled before the gallery is worth drawing. selectVideo renders on its way
-// out, so the only path with nothing to select does the drawing itself.
+// before anything can look for a video to play. The gallery is no longer part
+// of it — both calls below reach renderVideoGallery, and both no-op until the
+// Background tab is opened. They stay because that is what draws the tiles
+// when the panel is already open and the selection changes underneath it.
 (async () => {
     await syncPresetVideos();
 
