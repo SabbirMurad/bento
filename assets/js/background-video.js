@@ -21,6 +21,8 @@ const preset_backgrounds = [
     { name: 'Evelyn', url: 'https://motionbgs.com/media/9217/evelyn.1920x1080.mp4' },
     { name: 'Sleeping Among Flowers', url: 'https://motionbgs.com/media/9851/sleeping-among-flowers.1920x1080.mp4' },
     { name: 'Glitch Queen Awakens', url: 'https://motionbgs.com/media/8765/glitch-queen-awakens.1920x1080.mp4' },
+    { name: 'Monochrome Daydreams', url: 'https://motionbgs.com/media/9693/monochrome-daydreams.1920x1080.mp4' },
+    { name: 'Crimson Silence', url: 'https://motionbgs.com/media/9097/crimson-silence.1920x1080.mp4' },
 ];
 
 // Which one a profile that has never chosen a background ends up on. Named
@@ -38,7 +40,7 @@ const presetId = name => `preset-${toDashCase(name)}`;
 // boolean — it could only say that presets had been put in at some point, so a
 // profile that had already run kept the ones it got the first time and never
 // saw a change to the list.
-const PRESETS_VERSION = 4;
+const PRESETS_VERSION = 5;
 const videoInput = document.querySelector("#settings-sidebar .video-selector #videoInput")
 
 // Open DB
