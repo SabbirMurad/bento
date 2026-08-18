@@ -29,6 +29,30 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
+/* The sub-pane's own gap already separates this from the grid above it, so
+   the note's usual top margin would only double the space. Larger than a
+   .settings-note's 11px too: this one is a pointer worth following, not a
+   footnote qualifying the control above it. Same specificity as that rule and
+   later in the file, which is what makes the size stick. */
+#settings-sidebar .preset-source {
+  margin-top: 0;
+  font-size: 14px;
+}
+
+/* First anchor in the panel, so link styling starts here rather than in a
+   reset — nothing else had one to inherit from. Underline on hover only: the
+   colour already marks it as a link, and a permanent rule under a URL this
+   long reads as clutter. */
+#settings-sidebar .settings-note a {
+  color: rgba(26, 188, 156, 0.9);
+  text-decoration: none;
+}
+
+#settings-sidebar .settings-note a:hover,
+#settings-sidebar .settings-note a:focus-visible {
+  text-decoration: underline;
+}
+
 #settings-sidebar .settings-status {
   display: block;
   margin-top: 6px;
